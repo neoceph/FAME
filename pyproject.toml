@@ -23,8 +23,3 @@ Issues = "https://github.com/neoceph/FAME/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/FVM"]
-
-
-[testpypi]
-  username = "__token__"
-  password = "pypi-AgENdGVzdC5weXBpLm9yZwIkMGU0ZjAxOGQtYTUwNi00M2VkLWI3NTctY2UyZDVjMTU0ZTk2AAIqWzMsImE0NjZlZGQwLWU2YTQtNDAwNS04Nzc3LWM0OWYyNDI5MWM0ZCJdAAAGIAAgE5C3MqTcfd3oixgtM3fcUK7ny_snUWjgqV9bCOUV"
