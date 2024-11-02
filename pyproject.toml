@@ -5,10 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "FAME"
 version = "0.0.1"
-authors = [
-  { name="Abdullah Al Amin", email="nirjhor18@gmail.com" },
-]
 description = "A framework for emulating additive manufacturing processes."
+authors = [
+  { name="Abdullah_Al_Amin", email="nirjhor18@gmail.com" },
+]
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -23,3 +23,8 @@ Issues = "https://github.com/neoceph/FAME/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/FVM"]
+
+
+[testpypi]
+  username = "neoceph"
+  password = "pypi-AgENdGVzdC5weXBpLm9yZwIkMGU0ZjAxOGQtYTUwNi00M2VkLWI3NTctY2UyZDVjMTU0ZTk2AAIqWzMsImE0NjZlZGQwLWU2YTQtNDAwNS04Nzc3LWM0OWYyNDI5MWM0ZCJdAAAGIAAgE5C3MqTcfd3oixgtM3fcUK7ny_snUWjgqV9bCOUV"
