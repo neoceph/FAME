@@ -1,5 +1,9 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "Framework for Additive Manufacturing Emulation"
+name = "FAME"
 version = "0.0.1"
 authors = [
   { name="Abdullah Al Amin", email="nirjhor18@gmail.com" },
@@ -16,3 +20,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/neoceph/FAME"
 Issues = "https://github.com/neoceph/FAME/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/FVM"]
