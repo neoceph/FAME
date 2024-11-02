@@ -1,0 +1,18 @@
+[project]
+name = "Framework for Additive Manufacturing Emulation"
+version = "0.0.1"
+authors = [
+  { name="Abdullah Al Amin", email="nirjhor18@gmail.com" },
+]
+description = "A framework for emulating additive manufacturing processes."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"
