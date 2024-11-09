@@ -1,2 +1,3 @@
 # Ignore dist directory
 dist/
+docs/build/
