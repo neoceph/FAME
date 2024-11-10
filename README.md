@@ -1,4 +1,11 @@
+![Documentation Status](https://readthedocs.org/projects/fame-ud/badge/?version=latest)
+[![PyPI version](https://img.shields.io/pypi/v/FAME-UD.svg)](https://test.pypi.org/project/FAME-UD/)
+
 # FAME: FVM Based Laser Powder Bed Fusion Additive Manufacturing Process Simulation
+
+## restructred text live preview on vscode
+
+- need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to 'File->Preference->Settings' and finding Esbonio>Server:Python Path
 
 ## building the package
 
