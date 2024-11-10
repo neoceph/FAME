@@ -1,5 +1,5 @@
 ![Documentation Status](https://readthedocs.org/projects/fame-ud/badge/?version=latest)
-[![PyPI version](https://img.shields.io/pypi/v/FAME-UD.svg)](https://test.pypi.org/project/FAME-UD/)
+[![PyPI version](https://img.shields.io/badge/TestPyPI-0.1.0-blue)](https://test.pypi.org/project/FAME-UD/)
 
 # FAME: FVM Based Laser Powder Bed Fusion Additive Manufacturing Process Simulation
 
