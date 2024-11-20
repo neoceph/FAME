@@ -2,9 +2,10 @@
 [![PyPI version](https://img.shields.io/badge/TestPyPI-0.1.0-blue)](https://test.pypi.org/project/FAME-UD/)
 
 # Generating Sphinx documentation
-
-- `make clean`
-- `make html`
+From the root directory run the following commands [Powershell in windows or bash in linux]
+- `./docs/make clean`
+- `sphinx-apidoc -o ./docs/source/ ./src`
+- `./docs/make html`
 
 # Generating Docstring using VSCode extension
 
