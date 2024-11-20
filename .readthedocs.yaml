@@ -24,8 +24,11 @@ sphinx:
 
 # API doc generation before the documentation build
 # See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-commands:
-  - sphinx-apidoc -o docs/source/ ./src
+build:
+  jobs:
+    pre_build:
+      - path: .
+        command: sphinx-apidoc -o docs/source/ ./src --force
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats:
