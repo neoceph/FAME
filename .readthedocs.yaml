@@ -27,8 +27,7 @@ sphinx:
 build:
   jobs:
     pre_build:
-      - path: .
-        command: sphinx-apidoc -o docs/source/ ./src --force
+      - sphinx-apidoc -o docs/source/ src
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats:
