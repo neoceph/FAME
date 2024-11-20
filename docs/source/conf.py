@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('../../src'))  # Path to your src folder
 project = 'FAME'
 copyright = '2024, Abdullah Al Amin'
 author = 'Abdullah Al Amin'
-release = '2024'
+release = '2024.11'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

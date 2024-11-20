@@ -6,6 +6,7 @@ From the root directory run the following commands [Powershell in windows or bas
 - `./docs/make clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
 - `./docs/make html`
+- `./docs/make pdflatex` to generate pdf. The appropriate latex compiler must be installed and available.
 
 # Generating Docstring using VSCode extension
 
