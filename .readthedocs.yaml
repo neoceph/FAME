@@ -9,7 +9,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
-    # You can also specify other tool versions:
+  jobs:
+    pre_build: # API doc generation before the documentation build
+      - sphinx-apidoc -o docs/source/ src
     # nodejs: "20"
     # rust: "1.70"
     # golang: "1.20"
@@ -22,12 +24,6 @@ sphinx:
   # Fail on all warnings to avoid broken references
   # fail_on_warning: true
 
-# API doc generation before the documentation build
-# See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-build:
-  jobs:
-    pre_build:
-      - sphinx-apidoc -o docs/source/ src
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats:
