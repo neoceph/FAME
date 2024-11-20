@@ -1,2 +1,4 @@
+sphinx
 sphinx-rtd-theme
 sphinx_autodoc_typehints
+vtk==9.3.1

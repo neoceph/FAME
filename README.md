@@ -1,11 +1,26 @@
 ![Documentation Status](https://readthedocs.org/projects/fame-ud/badge/?version=latest)
 [![PyPI version](https://img.shields.io/badge/TestPyPI-0.1.0-blue)](https://test.pypi.org/project/FAME-UD/)
 
+# Generating Sphinx documentation
+
+- `make clean`
+- `make html`
+
+# Generating Docstring using VSCode extension
+
+If you are using VS code, the [Python Docstring](https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring) extension can be used to auto-generate a docstring snippet once a function/class has been written. If you want the extension to generate docstrings in `Sphinx` format, you must set the `"autoDocstring.docstringFormat": "sphinx"` setting, under File > Preferences > Settings.
+
+Note that it is best to write the docstrings once you have fully defined the function/class, as then the extension will generate the full dosctring. If you make any changes to the code once a docstring is generated, you will have to manually go and update the affected docstrings.
+
 # FAME: FVM Based Laser Powder Bed Fusion Additive Manufacturing Process Simulation
 
 ## restructred text live preview on vscode
 
 - need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to 'File->Preference->Settings' and finding Esbonio>Server:Python Path
+
+## restructured text cheatsheet
+
+Details of rST is found [here](https://thomas-cokelaer.info/tutorials/sphinx/rest_syntax.html)
 
 ## building the package
 
