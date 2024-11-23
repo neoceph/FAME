@@ -1,5 +1,9 @@
 # Installation of VTK from source and linking to anaconda environment
 
+## Appropriate python anaconda environment can be created by issuing
+```bash
+conda env create -f environment.yaml
+```
 ## Download and installation of vtk (Windows)
 
 **1.** Make sure you have cmake installed and the path is added to environment variable.
