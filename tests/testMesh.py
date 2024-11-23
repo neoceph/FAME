@@ -82,7 +82,7 @@ class TestMesh(unittest.TestCase):
         mesh.write_to_vtk(filename="test_mesh.vtk")
         # Verify file is written
         self.assertTrue(os.path.exists("test_mesh.vtk"))
-        os.remove("test_mesh.vtk")
+        # os.remove("test_mesh.vtk")
 
 
 if __name__ == "__main__":

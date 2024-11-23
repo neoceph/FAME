@@ -1,4 +1,5 @@
 import vtk
+import numpy as np
 
 
 class Vertex:
@@ -26,14 +27,10 @@ class CellFace:
         vec2 = [self.points[2][i] - self.points[1][i] for i in range(3)]
         
         # Cross product for area calculation
-        cross_product = [
-            vec1[1] * vec2[2] - vec1[2] * vec2[1],
-            vec1[2] * vec2[0] - vec1[0] * vec2[2],
-            vec1[0] * vec2[1] - vec1[1] * vec2[0]
-        ]
+        cross_product = np.cross(vec1, vec2)
         
-        # Magnitude of cross product vector gives twice the area of the triangle
-        area = (sum(c ** 2 for c in cross_product) ** 0.5) / 2
+        # Magnitude of cross product vector gives the area of the rectangle or parrellopipe
+        area = np.linalg.norm(cross_product)
         return abs(area)
 
 
@@ -141,18 +138,19 @@ class Mesh:
         writer = vtk.vtkStructuredGridWriter()
         writer.SetFileName(filename)
         writer.SetInputData(self.structured_grid)
+        writer.SetFileTypeToBinary()
         writer.Write()
 
 
 # Example Usage
-mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
-mesh.generate_mesh()
+# mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
+# mesh.generate_mesh()
 
-# Access a specific cell and face
-cell = mesh.cells[0]
-print("Cell Center:", cell.center)
-print("East Face Area:", cell.getArea('east'))
+# # Access a specific cell and face
+# cell = mesh.cells[0]
+# print("Cell Center:", cell.center)
+# print("East Face Area:", cell.getArea('east'))
 
-# Write mesh to VTK file
-mesh.write_to_vtk()
-print("VTK file 'structured_mesh.vtk' written successfully.")
+# # Write mesh to VTK file
+# mesh.write_to_vtk()
+# print("VTK file 'structured_mesh.vtk' written successfully.")

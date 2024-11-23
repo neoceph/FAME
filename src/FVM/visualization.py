@@ -29,9 +29,9 @@ for z in range(dimensions[2]):
 structured_grid.GetPointData().SetScalars(scalars)
 
 # Write the structured grid to a VTK file
-writer = vtk.vtkStructuredGridWriter()
-writer.SetFileName("structured_grid.vtk")
-writer.SetInputData(structured_grid)
-writer.Write()
+# writer = vtk.vtkStructuredGridWriter()
+# writer.SetFileName("structured_grid.vtk")
+# writer.SetInputData(structured_grid)
+# writer.Write()
 
-print("VTK file 'structured_grid.vtk' written successfully.")
+# print("VTK file 'structured_grid.vtk' written successfully.")
