@@ -35,6 +35,8 @@ cmake --build . --config Release --target INSTALL --parallel
 ```
 **5.** Once installation complete, create a `set_pythonpath.ps1` file for powershell or `set_pythonpath.bat` for CMD under directory `anaconda\installation\directory\etc\conda\activate.d`and set the VTK installation path.
 
+If specific environment other than the `base` environment is of interest, the files need to be placed under `%CONDA_PREFIX%\etc\conda\deactivate.d` and `%CONDA_PREFIX%\etc\conda\activate.d`
+
 powershell
 ```powershell
 $env:PYTHONPATH = "D:/destination/to/installation/of/VTK/Lib/site-packages;" + $env:PYTHONPATH

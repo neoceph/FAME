@@ -1,5 +1,6 @@
 import vtk
 import numpy as np
+from tqdm import tqdm
 
 
 class Vertex:
@@ -78,58 +79,70 @@ class Mesh:
         dz = (self.z_max - self.z_min) / self.nz
 
         index = 0
-        for z in range(self.nz + 1):
-            for y in range(self.ny + 1):
-                for x in range(self.nx + 1):
-                    # Add point to vtkPoints
-                    self.points.InsertNextPoint(
-                        self.x_min + x * dx,
-                        self.y_min + y * dy,
-                        self.z_min + z * dz
-                    )
+        total_points = (self.nx + 1) * (self.ny + 1) * (self.nz + 1)
+        total_cells = self.nx * self.ny * self.nz
+
+        # Custom bar format with ANSI color codes
+        bar_format = "\033[92m{l_bar}\033[0m\033[92m{bar}\033[91m{r_bar}\033[0m"
+
+        # Progress bar for point generation
+        with tqdm(total=total_points, desc="Generating Points", bar_format="{desc}: " + bar_format) as point_pbar:
+            for z in range(self.nz + 1):
+                for y in range(self.ny + 1):
+                    for x in range(self.nx + 1):
+                        # Add point to vtkPoints
+                        self.points.InsertNextPoint(
+                            self.x_min + x * dx,
+                            self.y_min + y * dy,
+                            self.z_min + z * dz
+                        )
+                        point_pbar.update(1)
 
         self.structured_grid.SetDimensions(self.nx + 1, self.ny + 1, self.nz + 1)
         self.structured_grid.SetPoints(self.points)
 
-        # Create cells and calculate centers
-        for z in range(self.nz):
-            for y in range(self.ny):
-                for x in range(self.nx):
-                    # Calculate cell center
-                    center = (
-                        self.x_min + x * dx + dx / 2,
-                        self.y_min + y * dy + dy / 2,
-                        self.z_min + z * dz + dz / 2
-                    )
+        # Progress bar for cell creation
+        with tqdm(total=total_cells, desc="Creating Cells") as cell_pbar:
+            # Create cells and calculate centers
+            for z in range(self.nz):
+                for y in range(self.ny):
+                    for x in range(self.nx):
+                        # Calculate cell center
+                        center = (
+                            self.x_min + x * dx + dx / 2,
+                            self.y_min + y * dy + dy / 2,
+                            self.z_min + z * dz + dz / 2
+                        )
 
-                    # Calculate vertices
-                    vertices = [
-                        Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + z * dz)),
-                        Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + z * dz)),
-                        Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
-                        Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
-                        Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
-                        Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
-                        Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz)),
-                        Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz))
-                    ]
+                        # Calculate vertices
+                        vertices = [
+                            Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + z * dz)),
+                            Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + z * dz)),
+                            Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
+                            Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
+                            Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
+                            Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
+                            Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz)),
+                            Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz))
+                        ]
 
-                    # Define faces
-                    faces = {
-                        'east': CellFace([v.getCoordinate() for v in [vertices[1], vertices[5], vertices[6], vertices[2]]]),
-                        'west': CellFace([v.getCoordinate() for v in [vertices[0], vertices[3], vertices[7], vertices[4]]]),
-                        'north': CellFace([v.getCoordinate() for v in [vertices[2], vertices[6], vertices[7], vertices[3]]]),
-                        'south': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[5], vertices[4]]]),
-                        'top': CellFace([v.getCoordinate() for v in [vertices[4], vertices[5], vertices[6], vertices[7]]]),
-                        'bottom': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[2], vertices[3]]]),
-                    }
+                        # Define faces
+                        faces = {
+                            'east': CellFace([v.getCoordinate() for v in [vertices[1], vertices[5], vertices[6], vertices[2]]]),
+                            'west': CellFace([v.getCoordinate() for v in [vertices[0], vertices[3], vertices[7], vertices[4]]]),
+                            'north': CellFace([v.getCoordinate() for v in [vertices[2], vertices[6], vertices[7], vertices[3]]]),
+                            'south': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[5], vertices[4]]]),
+                            'top': CellFace([v.getCoordinate() for v in [vertices[4], vertices[5], vertices[6], vertices[7]]]),
+                            'bottom': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[2], vertices[3]]]),
+                        }
 
-                    # Create the cell and assign faces
-                    cell = Cell(unique_index=index, center=center, vertices=vertices)
-                    cell.faces = faces
+                        # Create the cell and assign faces
+                        cell = Cell(unique_index=index, center=center, vertices=vertices)
+                        cell.faces = faces
 
-                    self.cells.append(cell)
-                    index += 1
+                        self.cells.append(cell)
+                        index += 1
+                        cell_pbar.update(1)
 
     def write_to_vtk(self, filename="structured_mesh.vtk"):
         """
