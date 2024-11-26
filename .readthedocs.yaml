@@ -42,5 +42,4 @@ formats:
 #         - sphinx_autodoc_typehints
 python:
   install:
-    - method: pip
     - requirements: environment.yaml
