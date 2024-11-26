@@ -39,13 +39,10 @@ dependencies:
   - hdf5=1.14.4=nompi_hd5d9e70_103
   - icu=75.1=he0c23c2_0
   - idna=3.10=pyhd8ed1ab_0
-  - intel-openmp=2025.0.0=h57928b3_1164
   - jsoncpp=1.9.6=hc790b64_0
   - krb5=1.21.3=hdf4eb48_0
   - lerc=4.0.0=h63175ca_0
   - libaec=1.1.3=h63175ca_0
-  - libblas=3.9.0=8_mkl
-  - libcblas=3.9.0=8_mkl
   - libclang13=19.1.4=default_ha5278ca_0
   - libcurl=8.10.1=h1ee3ff0_0
   - libdeflate=1.22=h2466b09_0
@@ -56,7 +53,6 @@ dependencies:
   - libiconv=1.17=hcfcfb64_2
   - libintl=0.22.5=h5728263_3
   - libjpeg-turbo=3.0.0=hcfcfb64_1
-  - liblapack=3.9.0=8_mkl
   - libnetcdf=4.9.2=nompi_he239ae6_115
   - libogg=1.3.5=h2466b09_0
   - libopus=1.3.1=h8ffe710_1
@@ -73,11 +69,9 @@ dependencies:
   - libzlib=1.3.1=h2466b09_2
   - loguru=0.7.2=py39hcbf5309_2
   - lz4-c=1.9.4=hcfcfb64_0
-  - mkl=2020.4=hb70f87d_311
   - msgpack-python=1.1.0=py39h2b77a98_0
   - multidict=6.1.0=py39hf73967f_1
   - nlohmann_json=3.11.3=he0c23c2_1
-  - numpy=2.0.2=py39h60232e0_1
   - openh264=2.5.0=ha9db3cd_0
   - openssl=3.4.0=h2466b09_0
   - pango=1.54.0=hbb871f6_2
@@ -135,6 +129,7 @@ dependencies:
       - lsprotocol==2023.0.1
       - markupsafe==3.0.2
       - matplotlib==3.9.2
+      - numpy==2.0.2
       - packaging==24.2
       - pillow==11.0.0
       - platformdirs==4.3.6
