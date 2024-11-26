@@ -5,7 +5,7 @@
 conda env create -f environment.yaml
 ```
 
-### When its time to push changes read the instructions from [here](docs/developerReadme/pushingChanges.md)
+### When its time to push changes read the instructions from [here](./pushingChanges.md)
 
 ## Download and installation of vtk from source if needed (Windows)
 
