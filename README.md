@@ -1,7 +1,7 @@
 ![Documentation Status](https://readthedocs.org/projects/fame-ud/badge/?version=latest)
 [![PyPI version](https://img.shields.io/badge/TestPyPI-0.1.0-blue)](https://test.pypi.org/project/FAME-UD/)
 
-## Development instructions for FAME is [here](docs/developerReadme/development.md)
+## Development: [here](docs/developerReadme/development.md)
 
 ## Documentation for the app is available through readthedocs and is located [here.](https://fame-ud.readthedocs.io/en/latest/)
 
