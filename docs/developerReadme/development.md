@@ -4,7 +4,10 @@
 ```bash
 conda env create -f environment.yaml
 ```
-## Download and installation of vtk (Windows)
+
+### When its time to push changes read the instructions from [here](docs/developerReadme/pushingChanges.md)
+
+## Download and installation of vtk from source if needed (Windows)
 
 **1.** Make sure you have cmake installed and the path is added to environment variable.
 ```powershell

@@ -58,31 +58,48 @@ class TestCell(unittest.TestCase):
 
 
 class TestMesh(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up a Mesh object once for all test methods in the class.
+        """
+        cls.mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
+
+    def setUp(self):
+        """
+        Reset or adjust properties of the Mesh object for individual tests if needed.
+        """
+        self.mesh.divisions = (2, 4, 2)  # Reset divisions to default
+        self.mesh.x_range = (0, 1)
+        self.mesh.y_range = (0, 2)
+        self.mesh.z_range = (0, 1)
+
     def test_mesh_initialization(self):
-        mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
-        self.assertEqual(mesh.x_min, 0)
-        self.assertEqual(mesh.x_max, 1)
-        self.assertEqual(mesh.y_min, 0)
-        self.assertEqual(mesh.y_max, 2)
-        self.assertEqual(mesh.z_min, 0)
-        self.assertEqual(mesh.z_max, 1)
-        self.assertEqual(mesh.nx, 2)
-        self.assertEqual(mesh.ny, 4)
-        self.assertEqual(mesh.nz, 2)
+        self.assertEqual(self.mesh.x_min, 0)
+        self.assertEqual(self.mesh.x_max, 1)
+        self.assertEqual(self.mesh.y_min, 0)
+        self.assertEqual(self.mesh.y_max, 2)
+        self.assertEqual(self.mesh.z_min, 0)
+        self.assertEqual(self.mesh.z_max, 1)
+        self.assertEqual(self.mesh.nx, 2)
+        self.assertEqual(self.mesh.ny, 4)
+        self.assertEqual(self.mesh.nz, 2)
 
     def test_mesh_generate_mesh(self):
-        mesh = Mesh(x_range=(0, 1), y_range=(0, 1), z_range=(0, 1), divisions=(1, 1, 1))
-        mesh.generate_mesh()
-        self.assertEqual(len(mesh.cells), 1)  # Only one cell in this simple case
-        self.assertEqual(mesh.structured_grid.GetNumberOfPoints(), 8)  # 2x2x2 points
+        # Modify mesh properties for this test
+        self.mesh.divisions = (1, 1, 1)
+        self.mesh.generate_mesh()
+        self.assertEqual(len(self.mesh.cells), 1)  # Only one cell in this simple case
+        self.assertEqual(self.mesh.structured_grid.GetNumberOfPoints(), 8)  # 2x2x2 points
 
     def test_mesh_write_to_vtk(self):
-        mesh = Mesh(x_range=(0, 1), y_range=(0, 1), z_range=(0, 1), divisions=(1, 1, 1))
-        mesh.generate_mesh()
-        mesh.write_to_vtk(filename="test_mesh.vtk")
+        self.mesh.divisions = (1, 1, 1)
+        self.mesh.generate_mesh()
+        filename = "test_mesh.vtk"
+        self.mesh.write_to_vtk(filename=filename)
         # Verify file is written
-        self.assertTrue(os.path.exists("test_mesh.vtk"))
-        # os.remove("test_mesh.vtk")
+        self.assertTrue(os.path.exists(filename))
+        # os.remove(filename)  # Clean up
 
 
 if __name__ == "__main__":

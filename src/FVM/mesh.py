@@ -1,6 +1,8 @@
 import vtk
 import numpy as np
 from tqdm import tqdm
+import h5py
+import numpy as np
 
 
 class Vertex:
@@ -153,7 +155,6 @@ class Mesh:
         writer.SetInputData(self.structured_grid)
         writer.SetFileTypeToBinary()
         writer.Write()
-
 
 # Example Usage
 # mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
