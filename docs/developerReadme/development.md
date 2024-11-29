@@ -1,9 +1,14 @@
-# Installation of VTK from source and linking to anaconda environment
+# Steps to setup environment for development
 
-## Appropriate python anaconda environment can be created by issuing
+**1.** Clone the repository from github 
+```bash
+git clone https://github.com/neoceph/FAME
+```
+**2.** Create appropriate python environment by issuing the following command
 ```bash
 conda env create -f environment.yaml
 ```
+**3.** You are ready to contribute code under `.\src` or `.\tests`.
 
 ### When its time to push changes read the instructions from [here](./pushingChanges.md)
 
@@ -91,7 +96,7 @@ From the root directory run the following commands [Powershell in windows or bas
 - `./docs/make clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
 - `./docs/make html`
-- `./docs/make latexpdf` to generate pdf. The appropriate latex compiler must be installed and available.
+- `./docs/make latexpdf` to generate pdf. <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
 
 # Generating Docstring using VSCode extension
 

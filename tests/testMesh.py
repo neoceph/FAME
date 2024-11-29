@@ -1,105 +1,114 @@
 import os
 import unittest
-from src.FVM.mesh import Vertex, CellFace, Cell, Mesh
+import vtk
+from src.FVM.mesh import StructuredMesh  # Assuming your StructuredMesh is in the same directory as mesh.py
 
 
-class TestVertex(unittest.TestCase):
-    def test_vertex_initialization(self):
-        coordinate = (1.0, 2.0, 3.0)
-        vertex = Vertex(coordinate)
-        self.assertEqual(vertex.getCoordinate(), coordinate)
-
-
-class TestCellFace(unittest.TestCase):
-    def test_cellface_initialization(self):
-        points = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
-        face = CellFace(points)
-        self.assertEqual(face.points, points)
-
-    def test_cellface_get_area_valid(self):
-        points = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
-        face = CellFace(points)
-        self.assertAlmostEqual(face.getArea(), 1.0)
-
-    def test_cellface_get_area_invalid(self):
-        points = [(0, 0, 0), (1, 0, 0), (1, 1, 0)]  # Only 3 points
-        face = CellFace(points)
-        with self.assertRaises(ValueError):
-            face.getArea()
-
-
-class TestCell(unittest.TestCase):
-    def test_cell_initialization(self):
-        center = (0.5, 0.5, 0.5)
-        vertices = [Vertex((x, y, z)) for x, y, z in [
-            (0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0),
-            (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)
-        ]]
-        cell = Cell(unique_index=0, center=center, vertices=vertices)
-        self.assertEqual(cell.unique_index, 0)
-        self.assertEqual(cell.center, center)
-        self.assertEqual(len(cell.vertices), 8)
-
-    def test_cell_get_area(self):
-        center = (0.5, 0.5, 0.5)
-        vertices = [Vertex((x, y, z)) for x, y, z in [
-            (0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0),
-            (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)
-        ]]
-        faces = {
-            'east': CellFace([(1, 0, 0), (1, 0, 1), (1, 1, 1), (1, 1, 0)]),
-        }
-        cell = Cell(unique_index=0, center=center, vertices=vertices)
-        cell.faces = faces
-        self.assertAlmostEqual(cell.getArea('east'), 1.0)
-
-        with self.assertRaises(ValueError):
-            cell.getArea('invalid_direction')
-
-
-class TestMesh(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up a Mesh object once for all test methods in the class.
-        """
-        cls.mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
-
+class TestStructuredMesh(unittest.TestCase):
     def setUp(self):
         """
-        Reset or adjust properties of the Mesh object for individual tests if needed.
+        Set up a StructuredMesh object for each test case.
         """
-        self.mesh.divisions = (2, 4, 2)  # Reset divisions to default
-        self.mesh.x_range = (0, 1)
-        self.mesh.y_range = (0, 2)
-        self.mesh.z_range = (0, 1)
+        self.bounds = ((0, 10), (0, 5), (0, 2))
+        self.divisions = (11, 6, 3)
+        self.mesh = StructuredMesh(self.bounds, self.divisions)
 
-    def test_mesh_initialization(self):
-        self.assertEqual(self.mesh.x_min, 0)
-        self.assertEqual(self.mesh.x_max, 1)
-        self.assertEqual(self.mesh.y_min, 0)
-        self.assertEqual(self.mesh.y_max, 2)
-        self.assertEqual(self.mesh.z_min, 0)
-        self.assertEqual(self.mesh.z_max, 1)
-        self.assertEqual(self.mesh.nx, 2)
-        self.assertEqual(self.mesh.ny, 4)
-        self.assertEqual(self.mesh.nz, 2)
+    def testMeshInitialization(self):
+        """
+        Test that the StructuredMesh is initialized correctly.
+        """
+        # Verify dimensions
+        nx, ny, nz = self.mesh.GetDimensions()
+        self.assertEqual((nx, ny, nz), self.divisions)
 
-    def test_mesh_generate_mesh(self):
-        # Modify mesh properties for this test
-        self.mesh.divisions = (1, 1, 1)
-        self.mesh.generate_mesh()
-        self.assertEqual(len(self.mesh.cells), 1)  # Only one cell in this simple case
-        self.assertEqual(self.mesh.structured_grid.GetNumberOfPoints(), 8)  # 2x2x2 points
+        # Verify points are generated
+        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
 
-    def test_mesh_write_to_vtk(self):
-        self.mesh.divisions = (1, 1, 1)
-        self.mesh.generate_mesh()
-        filename = "test_mesh.vtk"
-        self.mesh.write_to_vtk(filename=filename)
-        # Verify file is written
-        self.assertTrue(os.path.exists(filename))
-        # os.remove(filename)  # Clean up
+    def test_vertex_initialization(self):
+        """
+        Test that vertices (points in the mesh) are initialized correctly.
+        """
+        # Check the first point in the mesh
+        point_id = 0
+        point = self.mesh.GetPoint(point_id)
+        expected_point = (0.0, 0.0, 0.0)  # First point should correspond to (0, 0, 0)
+        self.assertEqual(point, expected_point)
+
+        # Check the last point in the mesh
+        last_point_id = self.mesh.GetNumberOfPoints() - 1
+        last_point = self.mesh.GetPoint(last_point_id)
+        expected_last_point = (10.0, 5.0, 2.0)  # Last point in the grid
+        self.assertEqual(last_point, expected_last_point)
+
+        # Check the number of points
+        expected_num_points = 11 * 6 * 3
+        self.assertEqual(self.mesh.GetNumberOfPoints(), expected_num_points)
+
+    def testComputeCellCenters(self):
+        """
+        Test that cell centers are computed correctly.
+        """
+        self.assertEqual(len(self.mesh.cell_centers), self.mesh.GetNumberOfCells())
+
+        # Check the center of the first cell
+        first_cell_center = self.mesh.getCellCenter(0)
+        self.assertIsInstance(first_cell_center, tuple)
+        self.assertEqual(len(first_cell_center), 3)  # Should be an (x, y, z) coordinate
+
+    def testComputeNeighbors(self):
+        """
+        Test that neighboring cells and shared vertices are computed correctly.
+        """
+        shared_info = self.mesh.getSharedCellsInfo(0)
+        self.assertIn("shared_cells", shared_info)
+        self.assertIn("shared_vertices", shared_info)
+
+        # Verify the first cell has neighbors
+        shared_cells = shared_info["shared_cells"]
+        shared_vertices = shared_info["shared_vertices"]
+        self.assertIsInstance(shared_cells, list)
+        self.assertIsInstance(shared_vertices, list)
+
+        # Ensure there is at least one neighbor
+        self.assertGreater(len(shared_cells), 0)
+        self.assertGreater(len(shared_vertices), 0)
+
+    def testMeshSharedCellsIteration(self):
+        """
+        Test iteration over shared cells and vertices.
+        """
+        cell_id = 0
+        shared_info = self.mesh.getSharedCellsInfo(cell_id)
+        shared_cells = shared_info["shared_cells"]
+        shared_vertices = shared_info["shared_vertices"]
+
+        # Verify that shared cells and vertices can be iterated
+        for shared_cell, vertices in zip(shared_cells, shared_vertices):
+            self.assertIsInstance(shared_cell, int)
+            self.assertIsInstance(vertices, list)
+            self.assertGreater(len(vertices), 2)  # More than two vertices are shared
+
+    def testSharedCellArea(self):
+        """
+        Test that the area of a shared face between two cells is computed correctly using the calculateArea method.
+        """
+        cell_id = 0  # Choose a cell ID
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+
+        # Iterate over shared cells and compute area of the shared face
+        for shared_cell, shared_vertices in zip(shared_cells_info["shared_cells"], shared_cells_info["shared_vertices"]):
+            points = vtk.vtkPoints()
+
+            # Add shared vertices to the vtkPoints object
+            for vertex in shared_vertices:
+                points.InsertNextPoint(vertex)
+
+            # Calculate the area using the calculateArea method
+            area = self.mesh.calculateArea(points)
+
+            # For a structured grid with uniform spacing, validate expected area
+            expected_area = 1.0  # Assume uniform cell face spacing for this test
+            self.assertAlmostEqual(area, expected_area, places=5)
 
 
 if __name__ == "__main__":

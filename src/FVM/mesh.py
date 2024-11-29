@@ -4,167 +4,173 @@ from tqdm import tqdm
 import h5py
 import numpy as np
 
+from scipy.spatial import ConvexHull
 
-class Vertex:
-    def __init__(self, coordinate):
-        self.coordinate = coordinate
-
-    def getCoordinate(self):
-        return self.coordinate
-
-
-class CellFace:
-    def __init__(self, points):
-        self.points = points  # 4 points defining the face
-
-    def getArea(self):
+class StructuredMesh(vtk.vtkStructuredGrid):
+    def __init__(self, bounds, divisions):
         """
-        Calculate the area of the face.
-        Assumes the face is a rectangle for simplicity.
-        """
-        if len(self.points) != 4:
-            raise ValueError("Face must be defined by 4 points.")
+        Initializes the StructuredMesh.
         
-        # Vector math to calculate area (simple planar quad area)
-        vec1 = [self.points[1][i] - self.points[0][i] for i in range(3)]
-        vec2 = [self.points[2][i] - self.points[1][i] for i in range(3)]
+        Args:
+            bounds (tuple): Bounds of the grid as ((x_min, x_max), (y_min, y_max), (z_min, z_max)).
+            divisions (tuple): Number of divisions along x, y, z as (nx, ny, nz).
+        """
+        super().__init__()
+        self.sharedCells = []
+        self.cellCenters = []
+
+        # Generate grid points
+        self._generateGrid(bounds, divisions)
+
+        # Compute cell centers and neighboring information
+        self._computeCellCenter()
+        self._computeNeighbors()
+
+    def _generateGrid(self, bounds, divisions):
+        """
+        Generates the structured grid points and sets dimensions.
+        """
+        (x_min, x_max), (y_min, y_max), (z_min, z_max) = bounds
+        nx, ny, nz = divisions
+
+        # Create points
+        points = vtk.vtkPoints()
+        dx = (x_max - x_min) / (nx - 1)
+        dy = (y_max - y_min) / (ny - 1)
+        dz = (z_max - z_min) / (nz - 1)
+
+        for k in range(nz):
+            for j in range(ny):
+                for i in range(nx):
+                    x = x_min + i * dx
+                    y = y_min + j * dy
+                    z = z_min + k * dz
+                    points.InsertNextPoint(x, y, z)
+
+        self.SetDimensions(nx, ny, nz)
+        self.SetPoints(points)
+
+    def _computeCellCenter(self):
+        """
+        Computes the centers of all cells using vtkCellCenters.
+        """
+        cell_centers_filter = vtk.vtkCellCenters()
+        cell_centers_filter.SetInputData(self)
+        cell_centers_filter.Update()
+
+        cell_centers_output = cell_centers_filter.GetOutput()
+        self.cell_centers = [
+            cell_centers_output.GetPoint(i)
+            for i in range(cell_centers_output.GetNumberOfPoints())
+        ]
+
+    def _computeNeighbors(self):
+        """
+        Computes shared cell information for all cells.
+        """
+        for cell_id in range(self.GetNumberOfCells()):
+            currentCell = self.GetCell(cell_id)
+            points = currentCell.GetPoints()
+
+            vertices = [points.GetPoint(i) for i in range(points.GetNumberOfPoints())]
+            shared_cells = []
+            shared_vertices = []
+
+            for other_cell_id in range(self.GetNumberOfCells()):
+                if other_cell_id == cell_id:
+                    continue
+
+                other_cell = self.GetCell(other_cell_id)
+                other_points = other_cell.GetPoints()
+                shared_points = []
+
+                for i in range(other_points.GetNumberOfPoints()):
+                    if tuple(other_points.GetPoint(i)) in map(tuple, vertices):
+                        shared_points.append(other_points.GetPoint(i))
+
+                if len(shared_points) > 2:  # More than two vertices shared
+                    shared_cells.append(other_cell_id)
+                    shared_vertices.append(shared_points)
+
+            self.sharedCells.append({
+                "cell_id": cell_id,
+                "shared_cells": shared_cells,
+                "shared_vertices": shared_vertices
+            })
+
+    def getCellCenter(self, cell_id):
+        """
+        Retrieve the center of a specific cell.
         
-        # Cross product for area calculation
-        cross_product = np.cross(vec1, vec2)
+        Args:
+            cell_id (int): ID of the cell.
         
-        # Magnitude of cross product vector gives the area of the rectangle or parrellopipe
-        area = np.linalg.norm(cross_product)
-        return abs(area)
-
-
-class Cell:
-    def __init__(self, unique_index, center, vertices):
-        self.unique_index = unique_index
-        self.center = center  # Cell center coordinate
-        self.vertices = vertices  # 8 vertices of the cell
-        self.faces = {}  # Dictionary to store faces by direction
-
-    def getArea(self, direction):
+        Returns:
+            tuple: Center of the cell (x, y, z).
         """
-        Get the area of a face in a specific direction.
-        :param direction: One of ['east', 'west', 'north', 'south', 'top', 'bottom']
-        :return: Area of the specified face.
+        if 0 <= cell_id < len(self.cell_centers):
+            return self.cell_centers[cell_id]
+        else:
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+
+    def getSharedCellsInfo(self, cell_id):
         """
-        if direction not in self.faces:
-            raise ValueError(f"Invalid direction: {direction}")
-        return self.faces[direction].getArea()
-
-
-class Mesh:
-    def __init__(self, x_range, y_range, z_range, divisions):
+        Retrieve shared cells information for a specific cell.
+        
+        Args:
+            cell_id (int): ID of the cell.
+        
+        Returns:
+            dict: Information about shared cells and shared vertices.
         """
-        Initialize the mesh with given domain ranges and divisions.
-        :param x_range: Tuple (x_min, x_max) defining the range in the x direction.
-        :param y_range: Tuple (y_min, y_max) defining the range in the y direction.
-        :param z_range: Tuple (z_min, z_max) defining the range in the z direction.
-        :param divisions: Tuple (nx, ny, nz) for the number of divisions in x, y, z.
+        if 0 <= cell_id < len(self.sharedCells):
+            return self.sharedCells[cell_id]
+        else:
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+
+    def calculateArea(self, vtk_points):
         """
-        self.x_min, self.x_max = x_range
-        self.y_min, self.y_max = y_range
-        self.z_min, self.z_max = z_range
-        self.nx, self.ny, self.nz = divisions
-        self.cells = []
-        self.points = vtk.vtkPoints()
-        self.structured_grid = vtk.vtkStructuredGrid()
+        Calculate the area of a planar polygon using the Shoelace Formula.
 
-    def generate_mesh(self):
+        Args:
+            vtk_points (vtk.vtkPoints): vtkPoints object containing 3D coordinates of the polygon vertices.
+
+        Returns:
+            float: The computed area of the planar polygon.
         """
-        Generate the structured grid and populate points.
-        """
-        dx = (self.x_max - self.x_min) / self.nx
-        dy = (self.y_max - self.y_min) / self.ny
-        dz = (self.z_max - self.z_min) / self.nz
+        # Convert vtkPoints to a numpy array
+        num_points = vtk_points.GetNumberOfPoints()
+        if num_points < 3:
+            raise ValueError("At least 3 points are required to calculate the area.")
 
-        index = 0
-        total_points = (self.nx + 1) * (self.ny + 1) * (self.nz + 1)
-        total_cells = self.nx * self.ny * self.nz
+        points = np.array([vtk_points.GetPoint(i) for i in range(num_points)])
 
-        # Custom bar format with ANSI color codes
-        bar_format = "\033[92m{l_bar}\033[0m\033[92m{bar}\033[91m{r_bar}\033[0m"
+        # Step 1: Verify if points are planar
+        # Compute the normal vector of the plane using the first three points
+        v1 = points[1] - points[0]
+        v2 = points[2] - points[0]
+        normal = np.cross(v1, v2)
+        if np.linalg.norm(normal) == 0:
+            raise ValueError("Points are collinear and do not form a polygon.")
+        normal = normal / np.linalg.norm(normal)  # Normalize the normal vector
 
-        # Progress bar for point generation
-        with tqdm(total=total_points, desc="Generating Points", bar_format="{desc}: " + bar_format) as point_pbar:
-            for z in range(self.nz + 1):
-                for y in range(self.ny + 1):
-                    for x in range(self.nx + 1):
-                        # Add point to vtkPoints
-                        self.points.InsertNextPoint(
-                            self.x_min + x * dx,
-                            self.y_min + y * dy,
-                            self.z_min + z * dz
-                        )
-                        point_pbar.update(1)
+        # Check planarity by ensuring all points lie on the same plane
+        for point in points[3:]:
+            if not np.isclose(np.dot(point - points[0], normal), 0, atol=1e-6):
+                raise ValueError("Points are not planar and do not form a valid polygon.")
 
-        self.structured_grid.SetDimensions(self.nx + 1, self.ny + 1, self.nz + 1)
-        self.structured_grid.SetPoints(self.points)
+        # Step 2: Project points onto the dominant 2D plane
+        # Drop the axis with the largest normal component
+        dominant_axis = np.argmax(np.abs(normal))  # Choose axis to drop
+        projected_points = np.delete(points, dominant_axis, axis=1)
 
-        # Progress bar for cell creation
-        with tqdm(total=total_cells, desc="Creating Cells") as cell_pbar:
-            # Create cells and calculate centers
-            for z in range(self.nz):
-                for y in range(self.ny):
-                    for x in range(self.nx):
-                        # Calculate cell center
-                        center = (
-                            self.x_min + x * dx + dx / 2,
-                            self.y_min + y * dy + dy / 2,
-                            self.z_min + z * dz + dz / 2
-                        )
+        # Ensure projected points are ordered counterclockwise
+        hull = ConvexHull(projected_points)  # Ensures proper ordering
+        ordered_points = projected_points[hull.vertices]
 
-                        # Calculate vertices
-                        vertices = [
-                            Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + z * dz)),
-                            Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + z * dz)),
-                            Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
-                            Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + z * dz)),
-                            Vertex((self.x_min + x * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
-                            Vertex((self.x_min + (x + 1) * dx, self.y_min + y * dy, self.z_min + (z + 1) * dz)),
-                            Vertex((self.x_min + (x + 1) * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz)),
-                            Vertex((self.x_min + x * dx, self.y_min + (y + 1) * dy, self.z_min + (z + 1) * dz))
-                        ]
+        # Step 3: Calculate the area using the Shoelace Formula
+        x = ordered_points[:, 0]
+        y = ordered_points[:, 1]
+        area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
-                        # Define faces
-                        faces = {
-                            'east': CellFace([v.getCoordinate() for v in [vertices[1], vertices[5], vertices[6], vertices[2]]]),
-                            'west': CellFace([v.getCoordinate() for v in [vertices[0], vertices[3], vertices[7], vertices[4]]]),
-                            'north': CellFace([v.getCoordinate() for v in [vertices[2], vertices[6], vertices[7], vertices[3]]]),
-                            'south': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[5], vertices[4]]]),
-                            'top': CellFace([v.getCoordinate() for v in [vertices[4], vertices[5], vertices[6], vertices[7]]]),
-                            'bottom': CellFace([v.getCoordinate() for v in [vertices[0], vertices[1], vertices[2], vertices[3]]]),
-                        }
-
-                        # Create the cell and assign faces
-                        cell = Cell(unique_index=index, center=center, vertices=vertices)
-                        cell.faces = faces
-
-                        self.cells.append(cell)
-                        index += 1
-                        cell_pbar.update(1)
-
-    def write_to_vtk(self, filename="structured_mesh.vtk"):
-        """
-        Write the structured grid to a VTK file for visualization.
-        """
-        writer = vtk.vtkStructuredGridWriter()
-        writer.SetFileName(filename)
-        writer.SetInputData(self.structured_grid)
-        writer.SetFileTypeToBinary()
-        writer.Write()
-
-# Example Usage
-# mesh = Mesh(x_range=(0, 1), y_range=(0, 2), z_range=(0, 1), divisions=(2, 4, 2))
-# mesh.generate_mesh()
-
-# # Access a specific cell and face
-# cell = mesh.cells[0]
-# print("Cell Center:", cell.center)
-# print("East Face Area:", cell.getArea('east'))
-
-# # Write mesh to VTK file
-# mesh.write_to_vtk()
-# print("VTK file 'structured_mesh.vtk' written successfully.")
+        return area
