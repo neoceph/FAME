@@ -4,8 +4,6 @@ from tqdm import tqdm
 import h5py
 import numpy as np
 
-from scipy.spatial import ConvexHull
-
 class StructuredMesh(vtk.vtkStructuredGrid):
     def __init__(self, bounds, divisions):
         """
