@@ -2,6 +2,7 @@ import vtk
 import numpy as np
 import h5py
 import numpy as np
+import os
 
 from scipy.spatial import ConvexHull
 from tqdm import tqdm
@@ -36,9 +37,9 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
         # Create points
         points = vtk.vtkPoints()
-        dx = (x_max - x_min) / (nx - 1)
-        dy = (y_max - y_min) / (ny - 1)
-        dz = (z_max - z_min) / (nz - 1)
+        dx = (x_max - x_min) / nx
+        dy = (y_max - y_min) / ny
+        dz = (z_max - z_min) / nz
 
         for k in range(nz):
             for j in range(ny):
