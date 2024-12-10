@@ -35,8 +35,9 @@ formats:
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
 python:
   install:
-    - requirements: <(grep -v 'mpi4py' docs/requirements.txt)
+    - requirements: docs/requirements.txt
     - method: pip
       path: .
       extra_requirements:
         - sphinx_autodoc_typehints
+
