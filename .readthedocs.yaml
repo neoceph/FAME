@@ -40,3 +40,7 @@ python:
       path: .
       extra_requirements:
         - sphinx_autodoc_typehints
+
+# Add system dependencies like OpenMPI
+system_packages:
+  - libopenmpi-dev
