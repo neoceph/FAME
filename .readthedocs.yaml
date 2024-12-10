@@ -16,6 +16,10 @@ build:
     # rust: "1.70"
     # golang: "1.20"
 
+# Use Conda environment to install dependencies
+conda:
+  environment: environment.yaml  # Specify the Conda environment file
+
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
   configuration: docs/source/conf.py
@@ -33,10 +37,6 @@ formats:
 # Optional but recommended, declare the Python requirements required
 # to build your documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-
-# Use Conda environment to install dependencies
-conda:
-  environment: environment.yaml  # Specify the Conda environment file
 
 # Optional but recommended, additional Python dependencies for Sphinx extensions
 python:
