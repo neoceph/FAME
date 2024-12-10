@@ -40,4 +40,4 @@ python:
       path: .
       extra_requirements:
         - sphinx_autodoc_typehints
-    requirements: <(grep -v 'mpi4py' docs/requirements.txt)
+      requirements: <(grep -v 'mpi4py' docs/requirements.txt)
