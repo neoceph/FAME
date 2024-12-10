@@ -40,6 +40,4 @@ python:
       path: .
       extra_requirements:
         - sphinx_autodoc_typehints
-    - method: pip
-      package: mpi4py
-      options: ["--no-deps", "--ignore-installed"]
+    requirements: <(grep -v 'mpi4py' docs/requirements.txt)
