@@ -9,6 +9,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+    conda: "latest"
   jobs:
     pre_build: # API doc generation before the documentation build
       - sphinx-apidoc -o docs/source/ src
