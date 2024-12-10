@@ -38,11 +38,3 @@ formats:
 # to build your documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
 
-# Optional but recommended, additional Python dependencies for Sphinx extensions
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - sphinx_autodoc_typehints
-
