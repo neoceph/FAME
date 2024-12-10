@@ -5,6 +5,8 @@
 
 import os
 import sys
+from unittest.mock import MagicMock
+
 sys.path.insert(0, os.path.abspath('../../src'))  # Path to your src folder
 
 
@@ -37,3 +39,12 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 autoclass_content = "both"
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+    
+sys.modules[
+    'mpi4py'
+    ] = Mock()
