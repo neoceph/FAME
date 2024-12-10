@@ -5,6 +5,7 @@
 
 import os
 import sys
+from setuptools import setup, find_packages
 from unittest.mock import MagicMock
 
 sys.path.insert(0, os.path.abspath('../../src'))  # Path to your src folder
@@ -48,3 +49,19 @@ class Mock(MagicMock):
 sys.modules[
     'mpi4py'
     ] = Mock()
+
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
+install_requires = [
+    'other-dependencies',
+]
+
+if not on_rtd:
+    install_requires.append('mpi4py')
+
+setup(
+    name=project,
+    version=release,
+    packages=find_packages(),
+    install_requires=install_requires,
+)
