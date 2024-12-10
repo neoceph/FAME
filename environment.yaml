@@ -149,5 +149,10 @@ dependencies:
       - urllib3==2.2.3
       - vtk==9.4.0
       - zipp==3.20.2
+      - mpi4py==3.1.4
+      - mpich==4.1.2
+      - petsc4py==3.19.4
+      - petsc==3.19.6
+
 
 
