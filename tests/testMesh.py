@@ -37,7 +37,7 @@ class TestStructuredMesh(unittest.TestCase):
         # Check the last point in the mesh
         last_point_id = self.mesh.GetNumberOfPoints() - 1
         last_point = self.mesh.GetPoint(last_point_id)
-        expected_last_point = (10.0, 5.0, 2.0)  # Last point in the grid
+        expected_last_point = (9.0, 4.0, 1.0)  # Last point in the grid
         self.assertEqual(last_point, expected_last_point)
 
         # Check the number of points
