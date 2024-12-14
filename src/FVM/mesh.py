@@ -41,9 +41,9 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         dy = (y_max - y_min) / ny
         dz = (z_max - z_min) / nz
 
-        for k in range(nz):
-            for j in range(ny):
-                for i in range(nx):
+        for k in range(nz+1):
+            for j in range(ny+1):
+                for i in range(nx+1):
                     x = x_min + i * dx
                     y = y_min + j * dy
                     z = z_min + k * dz

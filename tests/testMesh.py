@@ -22,7 +22,7 @@ class TestStructuredMesh(unittest.TestCase):
         self.assertEqual((nx, ny, nz), self.divisions)
 
         # Verify points are generated
-        self.assertEqual(self.mesh.GetNumberOfPoints(), 10 * 5 * 2)
+        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
 
     def test_vertex_initialization(self):
         """
@@ -37,11 +37,11 @@ class TestStructuredMesh(unittest.TestCase):
         # Check the last point in the mesh
         last_point_id = self.mesh.GetNumberOfPoints() - 1
         last_point = self.mesh.GetPoint(last_point_id)
-        expected_last_point = (9.0, 4.0, 1.0)  # Last point in the grid
+        expected_last_point = (10.0, 5.0, 2.0)  # Last point in the grid
         self.assertEqual(last_point, expected_last_point)
 
         # Check the number of points
-        expected_num_points = 10 * 5 * 2
+        expected_num_points = 11 * 6 * 3
         self.assertEqual(self.mesh.GetNumberOfPoints(), expected_num_points)
 
     def testComputeCellCenters(self):
