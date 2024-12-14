@@ -92,11 +92,18 @@ except AttributeError:
 You can issue these lines of code on the terminal window by running python with command `python` or paste them into a `python.py` file and running the file with appropriate environment activated.
 
 # Generating Sphinx documentation
-From the root directory run the following commands [Powershell in windows or bash in linux]
+From the root directory run the following commands [Powershell in windows]
 - `./docs/make clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
 - `./docs/make html`
 - `./docs/make latexpdf` to generate pdf. <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
+
+ Or bash in linux
+- `make _C ./docs clean`
+- `sphinx-apidoc -o ./docs/source/ ./src`
+- `make _C ./docs html`
+- `./docs/make latexpdf`
+
 
 # Generating Docstring using VSCode extension
 
