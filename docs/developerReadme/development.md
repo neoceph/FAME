@@ -96,14 +96,15 @@ From the root directory run the following commands [Powershell in windows]
 - `./docs/make clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
 - `./docs/make html`
-- `./docs/make latexpdf` to generate pdf. <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
+- `./docs/make latexpdf` to generate pdf. 
+<span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
 
  Or bash in linux
-- `make _C ./docs clean`
+- `make -C ./docs clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
-- `make _C ./docs html`
-- `./docs/make latexpdf`
-
+- `make -C ./docs html`
+- `make -C ./docs latexpdf`
+<span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
 
 # Generating Docstring using VSCode extension
 
