@@ -15,7 +15,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         
         Args:
             bounds (tuple): Bounds of the grid as ((x_min, x_max), (y_min, y_max), (z_min, z_max)).
-            divisions (tuple): Number of divisions along x, y, z as (nx, ny, nz).
+            divisions (tuple): Number of divisions along x, y, z as (div_x, div_y, div_z).
         """
         super().__init__()
         self.sharedCells = []
@@ -33,17 +33,21 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         Generates the structured grid points and sets dimensions.
         """
         (x_min, x_max), (y_min, y_max), (z_min, z_max) = bounds
-        nx, ny, nz = divisions
+        div_x, div_y, div_z = divisions
 
         # Create points
         points = vtk.vtkPoints()
-        dx = (x_max - x_min) / nx
-        dy = (y_max - y_min) / ny
-        dz = (z_max - z_min) / nz
+        dx = (x_max - x_min) / div_x
+        dy = (y_max - y_min) / div_y
+        dz = (z_max - z_min) / div_z
 
-        for k in range(nz+1):
-            for j in range(ny+1):
-                for i in range(nx+1):
+        nx = div_x + 1
+        ny = div_y + 1
+        nz = div_z + 1
+
+        for k in range(nz):
+            for j in range(ny):
+                for i in range(nx):
                     x = x_min + i * dx
                     y = y_min + j * dy
                     z = z_min + k * dz

@@ -19,7 +19,11 @@ class TestStructuredMesh(unittest.TestCase):
         """
         # Verify dimensions
         nx, ny, nz = self.mesh.GetDimensions()
-        self.assertEqual((nx, ny, nz), self.divisions)
+        div_x = nx - 1
+        div_y = ny - 1
+        div_z = nz - 1
+        
+        self.assertEqual((div_x, div_y, div_z), self.divisions)
 
         # Verify points are generated
         self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
