@@ -8,6 +8,10 @@ git clone https://github.com/neoceph/FAME
 ```bash
 conda env create -f environment.yaml
 ```
+If there are errors, try
+```bash
+conda env create -f environment.yaml --force
+```
 **3.** You are ready to contribute code under `.\src` or `.\tests`.
 
 ### When its time to push changes read the instructions from [here](./pushingChanges.md)
