@@ -10,29 +10,32 @@ The heat diffusion equation in three dimensions can be written as:
 
 .. math::
 
-    \frac{\partial T}{\partial t} = \alpha \nabla^2 T + S_T
+    \rho c_p \frac{\partial T}{\partial t} = \frac{\partial}{\partial x_i}(k \frac{\partial T}{\partial x_i}) + S_T
 
 where:
 
 - :math:`T` is the temperature (dependent variable).
 - :math:`\alpha` is the thermal diffusivity (:math:`\alpha = \frac{k}{\rho c_p}`).
-- :math:`\nabla^2 T` is the Laplacian of the temperature field.
 - :math:`S_T` is a source term.
 
 In steady-state conditions, the time-dependent term vanishes:
 
 .. math::
 
-    \nabla^2 T + \frac{S_T}{\alpha} = 0
+    \frac{\partial}{\partial x_i}(k \frac{\partial T}{\partial x_i}) + S_T = 0
 
 Discretization in 3D
 --------------------
 
-Using the finite volume method (FVM), the diffusion equation is discretized over a control volume. The discretization involves integrating the equation over the control volume and applying Gauss's divergence theorem:
+The discretization in 1-D follows the scheme as shown in the image. Using the finite volume method (FVM), the diffusion equation is discretized over a control volume. The discretization involves integrating the equation over the control volume and applying Gauss's divergence theorem:
 
+.. image:: ../media/images/FVM/discretization_1D.svg
+   :alt: Example SVG
+   :scale: 50%
+   :align: right
 .. math::
 
-    \int_V \nabla^2 T \ dV = \int_A \nabla T \cdot \mathbf{n} \ dA
+    \int_{\Delta V} \left[\frac{\partial}{\partial x_i}\left(k \frac{\partial T}{\partial x_i}\right) + S_T\right] dV = \int_A \left[k \frac{\partial T}{\partial x_i} \right] \cdot \mathbf{n} \ dA + S_T \Delta V = 0
 
 Discretized Equation
 ---------------------
