@@ -120,7 +120,7 @@ Note that it is best to write the docstrings once you have fully defined the fun
 
 ## restructred text live preview on vscode
 
-- need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to 'File->Preference->Settings' and finding Esbonio>Server:Python Path
+- need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to `File->Preference->Settings` and finding `Esbonio>Server:Python Path` For example: `C:\\msys64\\ucrt64\\bin\\python.exe` 
 
 ## restructured text cheatsheet
 
