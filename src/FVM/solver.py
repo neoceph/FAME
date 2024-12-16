@@ -35,16 +35,17 @@ class Solver:
         Solve the system Ax = b using the selected backend and method.
 
         Parameters:
-        method: str, optional (default="bicgstab")
-            The solver method to use (e.g., "bicgstab", "cg", "gmres").
-        preconditioner: str, optional (default="none")
-            Preconditioner type (e.g., "jacobi") or "none" for no preconditioning.
-            For PETSc, passed directly to pc.setType().
+            method: str, optional (default="bicgstab")
+                The solver method to use (e.g., "bicgstab", "cg", "gmres").
+            preconditioner: str, optional (default="none")
+                Preconditioner type (e.g., "jacobi") or "none" for no preconditioning.
+                For PETSc, passed directly to pc.setType().
 
         Returns:
-        solution: numpy array
-            The solution vector.
+            solution: numpy array
+                The solution vector.
         """
+
         if self.backend == "scipy":
             self.solution = self._solve_scipy(method, preconditioner)
         elif self.backend == "jax":
