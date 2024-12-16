@@ -27,6 +27,10 @@ extensions = [
     'sphinx_autodoc_typehints',
 ]
 
+# Image conversion
+# Specify the converter for handling .svg files
+image_converter = 'cairosvg'
+
 templates_path = ['_templates']
 exclude_patterns = []
 
