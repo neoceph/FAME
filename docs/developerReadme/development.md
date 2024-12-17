@@ -1,6 +1,6 @@
 # Steps to setup environment for development
 
-**1.** Clone the repository from github 
+**1.** Make sure you have [anaconda](https://www.anaconda.com/download) installed and working. Clone the repository from github 
 ```bash
 git clone https://github.com/neoceph/FAME
 ```

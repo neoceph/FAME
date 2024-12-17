@@ -70,7 +70,7 @@ Here considering total number of shared cells are :math:`n` for a given cell :ma
 .. math::
     \begin{align*}
         & a_{ij} = \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]    \\
-        & a_{ii} = -\sum_{j=1}^n\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] + S_i  \\
+        & a_{ii} = -\sum_{j=1}^n\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] - S_i  \\
         & b_{i} = -S_u
     \end{align*}
 
