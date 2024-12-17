@@ -36,7 +36,44 @@ The discretization in 1-D follows the scheme as shown in the image. Using the fi
    
 .. math::
 
-    \int_{\Delta V} \left[\frac{\partial}{\partial x_i}\left(k \frac{\partial T}{\partial x_i}\right) + S_T\right] dV = \int_A \left[k \frac{\partial T}{\partial x_i} \right] \cdot \mathbf{n} \ dA + S_T \Delta V = 0
+    \int_{\Delta V} \left[\frac{\partial}{\partial x}\left(k \frac{\partial T}{\partial x}\right) + S_T\right] dV = 0
+
+.. math::
+    \Rightarrow \int_A \left[k \frac{\partial T}{\partial x} \right] \cdot \mathbf{n} \ dA + S_T \Delta V = 0
+
+.. math::
+    \Rightarrow \left[kA \frac{\partial T}{\partial x} \right]_{A_{right}} - \left[kA \frac{\partial T}{\partial x} \right]_{A_{left}} + S_T \Delta V = 0    
+
+Considering :math:`S_T \Delta V = S_u + S_i T_i` for a dependent source variable
+
+.. math::
+    \Rightarrow \left[kA \frac{\partial T}{\partial x} \right]_{A_{right}} - \left[kA \frac{\partial T}{\partial x} \right]_{A_{left}} + S_u + S_i T_i = 0    
+
+Now
+
+- :math:`\left[\frac{\partial T}{\partial x} \right]_{A_{right}} = \frac{T_{i+1}-T_i}{||x_{i+1} - x_i||^2}`
+- :math:`\left[\frac{\partial T}{\partial x} \right]_{A_{left}} = \frac{T_{i}-T_{i-1}}{||x_i-x_{i-1}||^2}`
+- :math:`k|_{A_{right}}=\frac{k_{i+1}+k_i}{2}`
+- :math:`k|_{A_{left}}=\frac{k_{i}+k_{i-1}}{2}`
+
+
+.. math::
+    
+    \begin{align*}
+        & \left[kA \frac{T_{i+1}-T_i}{||x_{i+1} - x_i||^2} \right] - \left[kA \frac{T_{i}-T_{i-1}}{||x_i-x_{i-1}||^2} \right] + S_u + S_i T_i = 0    \\
+        & \Rightarrow \left[ \frac{kA_{right}}{||x_{i+1} - x_i||^2} \right]T_{i+1} + \left[-\frac{kA_{left}}{||x_{i} - x_{i-1}||^2} -\frac{kA_{right}}{||x_{i+1} - x_i||^2} + S_i \right]T_{i} + \left[ \frac{kA_{left}}{||x_{i} - x_{i-1}||^2} \right]T_{i-1} = -S_u   \\
+        & \Rightarrow \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]T_{j} -\sum_{j=1}^n\left[\left(\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right) + S_i  \right]T_{i} = -S_u
+    \end{align*}
+
+Here considering total number of shared cells are :math:`n` for a given cell :math:`i` 
+
+.. math::
+    \begin{align*}
+        & a_{ij} = \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]    \\
+        & a_{ii} = -\sum_{j=1}^n\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] + S_i  \\
+        & b_{i} = -S_u
+    \end{align*}
+
 
 Discretized Equation
 ---------------------
