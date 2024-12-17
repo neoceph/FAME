@@ -29,10 +29,11 @@ Discretization in 3D
 
 The discretization in 1-D follows the scheme as shown in the image. Using the finite volume method (FVM), the diffusion equation is discretized over a control volume. The discretization involves integrating the equation over the control volume and applying Gauss's divergence theorem:
 
-.. .. image:: ../media/images/FVM/discretization_1D.svg
-..    :alt: Example SVG
-..    :scale: 50%
-..    :align: center
+.. image:: ../media/images/FVM/discretization_1D.svg
+   :alt: Example SVG
+   :scale: 50%
+   :align: center
+   
 .. math::
 
     \int_{\Delta V} \left[\frac{\partial}{\partial x_i}\left(k \frac{\partial T}{\partial x_i}\right) + S_T\right] dV = \int_A \left[k \frac{\partial T}{\partial x_i} \right] \cdot \mathbf{n} \ dA + S_T \Delta V = 0

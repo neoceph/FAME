@@ -25,6 +25,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_autodoc_typehints',
+    'sphinx.ext.mathjax',
+    'sphinxcontrib.cairosvgconverter',
 ]
 
 # Image conversion
