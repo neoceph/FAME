@@ -10,6 +10,6 @@ pip freeze > .\docs\requirements.txt
 
 ### Linux ###
 ```bash
-conda env export | grep -v "^prefix: " | sed -E 's/(=|==)[^=]+//g' > environment_linux.yml
+conda env export > environment_linux.yaml
 pip freeze > docs\requirements.txt
 ```
