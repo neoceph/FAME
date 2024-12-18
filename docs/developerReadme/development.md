@@ -6,11 +6,20 @@ git clone https://github.com/neoceph/FAME
 ```
 **2.** Create appropriate python environment by issuing the following command
 ```bash
-conda env create -f environment.yaml
+conda env create -f environment_linux.yaml
 ```
 If there are errors, try
 ```bash
-conda env create -f environment.yaml --force
+conda env create -f environment_linux.yaml --force
+```
+If environment is created and needs updating the packages list after dependancy install (i.e. petsc4py) try
+```bash
+conda env update --name FAME --file environment_linux.yaml
+```
+If PETSc installation is failing make sure you have BLAS and LAPACK available
+
+```bash
+conda install -c conda-forge blas lapack
 ```
 **3.** You are ready to contribute code under `.\src` or `.\tests`.
 

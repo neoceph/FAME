@@ -1,18 +1,30 @@
 name: FAME
 channels:
+  - conda-forge
   - defaults
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
+  - blas=2.114=blis
+  - blas-devel=3.9.0=14_linux64_blis
+  - blis=0.9.0=h166bdaf_0
   - bzip2=1.0.8=h5eee18b_6
   - ca-certificates=2024.11.26=h06a4308_0
   - expat=2.6.4=h6a678d5_0
+  - lapack=3.6.1=ha44fe06_2
   - ld_impl_linux-64=2.40=h12ee557_0
+  - libblas=3.9.0=14_linux64_blis
+  - libcblas=3.9.0=14_linux64_blis
   - libffi=3.4.4=h6a678d5_1
   - libgcc-ng=11.2.0=h1234567_1
+  - libgfortran=3.0.0=1
+  - libgfortran-ng=13.2.0=h69a702a_0
+  - libgfortran5=13.2.0=ha4646dd_0
   - libgomp=11.2.0=h1234567_1
+  - liblapack=3.9.0=5_h92ddd45_netlib
+  - liblapacke=3.9.0=5_h92ddd45_netlib
   - libmpdec=4.0.0=h5eee18b_0
   - libstdcxx-ng=11.2.0=h1234567_1
   - libuuid=1.41.5=h5eee18b_0
@@ -102,4 +114,4 @@ dependencies:
       - urllib3==2.2.3
       - vtk==9.4.0
       - webencodings==0.5.1
-prefix: /home/nirjhor/anaconda3/envs/FAME
+prefix: /home/neoceph/anaconda3/envs/FAME
