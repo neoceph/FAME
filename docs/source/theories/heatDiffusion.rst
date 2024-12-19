@@ -58,22 +58,21 @@ Now
 
 
 .. math::
-    
-    \begin{align*}
-        & \left[kA \frac{T_{i+1}-T_i}{||x_{i+1} - x_i||^2} \right] - \left[kA \frac{T_{i}-T_{i-1}}{||x_i-x_{i-1}||^2} \right] + S_u + S_i T_i = 0    \\
-        & \Rightarrow \left[ \frac{kA_{right}}{||x_{i+1} - x_i||^2} \right]T_{i+1} + \left[-\frac{kA_{left}}{||x_{i} - x_{i-1}||^2} -\frac{kA_{right}}{||x_{i+1} - x_i||^2} + S_i \right]T_{i} + \left[ \frac{kA_{left}}{||x_{i} - x_{i-1}||^2} \right]T_{i-1} = -S_u   \\
-        & \Rightarrow \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]T_{j} -\sum_{j=1}^n\left[\left(\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right) + S_i  \right]T_{i} = -S_u
-    \end{align*}
+    \begin{aligned}
+        & \left[kA \frac{T_{i+1}-T_i}{||x_{i+1} - x_i||^2} \right ] - \left[kA \frac{T_{i}-T_{i-1}}{||x_i-x_{i-1}||^2} \right] + S_u + S_i T_i & = 0 \\
+        \Rightarrow & \left[ \frac{kA_{right}}{||x_{i+1} - x_i||^2} \right]T_{i+1} + \left[-\frac{kA_{left}}{||x_{i} - x_{i-1}||^2} -\frac{kA_{right}}{||x_{i+1} - x_i||^2} + S_i \right]T_{i} \\
+            & \hspace{6.25 cm} + \left[ \frac{kA_{left}}{||x_{i} - x_{i-1}||^2} \right]T_{i-1} & = -S_u \\
+        \Rightarrow & \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]T_{j} -\sum_{j=1}^n\left[\left(\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right) + S_i  \right]T_{i} & = -S_u \\    
+    \end{aligned}
 
-Here considering total number of shared cells are :math:`n` for a given cell :math:`i` 
+Here considering a list of shared cells are :math:`\mathcal{J}` for a given cell :math:`i` 
 
 .. math::
-    \begin{align*}
-        & a_{ij} = \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]    \\
-        & a_{ii} = -\sum_{j=1}^n\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] - S_i  \\
-        & b_{i} = -S_u
-    \end{align*}
-
+    \begin{aligned}
+        a_{ij} &= \sum_{j \in \mathcal{J}}\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right] \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] - S_i \\
+        b_{i} &= -[S_u]_{i} \\
+    \end{aligned}
 
 Discretized Equation
 ---------------------
