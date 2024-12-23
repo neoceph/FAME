@@ -9,8 +9,8 @@ class TestStructuredMesh(unittest.TestCase):
         """
         Set up a StructuredMesh object for each test case.
         """
-        self.bounds = ((0, 10), (0, 5), (0, 2))
-        self.divisions = (10, 5, 2)
+        self.bounds = ((0, 10), (0, 5), (0, 3))
+        self.divisions = (10, 5, 3)
         self.mesh = StructuredMesh(self.bounds, self.divisions)
 
     def testMeshInitialization(self):
@@ -26,7 +26,7 @@ class TestStructuredMesh(unittest.TestCase):
         self.assertEqual((div_x, div_y, div_z), self.divisions)
 
         # Verify points are generated
-        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
+        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 4)
 
     def testVertexInitialization(self):
         """
@@ -41,11 +41,11 @@ class TestStructuredMesh(unittest.TestCase):
         # Check the last point in the mesh
         last_point_id = self.mesh.GetNumberOfPoints() - 1
         last_point = self.mesh.GetPoint(last_point_id)
-        expected_last_point = (10.0, 5.0, 2.0)  # Last point in the grid
+        expected_last_point = (10.0, 5.0, 3.0)  # Last point in the grid
         self.assertEqual(last_point, expected_last_point)
 
         # Check the number of points
-        expected_num_points = 11 * 6 * 3
+        expected_num_points = 11 * 6 * 4
         self.assertEqual(self.mesh.GetNumberOfPoints(), expected_num_points)
 
     def testFaceInitialization(self):
@@ -239,26 +239,56 @@ class TestStructuredMesh(unittest.TestCase):
         expected_area = 1.0
         self.assertAlmostEqual(area, expected_area, places=5)
 
-def testSharedCellArea(self):
-    """
-    Test that the area of a shared face between two cells is computed correctly using the calculateArea method.
-    """
-    cell_id = 0  # Choose a cell ID
-    shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+    def testSharedCellArea(self):
+        """
+        Test that the area of a shared face between two cells is computed correctly using the calculateArea method.
+        """
+        cell_id = 0  # Choose a cell ID
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
 
-    # Iterate over shared faces and compute area
-    for face_id in shared_cells_info["shared_faces"]:
-        face_points = vtk.vtkPoints()
+        # Iterate over shared faces and compute area
+        for face_id in shared_cells_info["shared_faces"]:
+            face_points = vtk.vtkPoints()
 
-        # Retrieve the points of the shared face
-        for vertex_id in self.mesh.faces[face_id]:
-            face_points.InsertNextPoint(self.mesh.GetPoint(vertex_id))
+            # Retrieve the points of the shared face
+            for vertex_id in self.mesh.faces[face_id]:
+                face_points.InsertNextPoint(self.mesh.GetPoint(vertex_id))
 
-        # Calculate the area using the calculateArea method
-        area = self.mesh.calculateArea(face_points)
+            # Calculate the area using the calculateArea method
+            area = self.mesh.calculateArea(face_points)
 
-        # For a structured grid with uniform spacing, validate expected area
-        expected_area = 1.0  # Assume uniform cell face spacing for this test
-        self.assertAlmostEqual(area, expected_area, places=5)
+            # For a structured grid with uniform spacing, validate expected area
+            expected_area = 1.0  # Assume uniform cell face spacing for this test
+            self.assertAlmostEqual(area, expected_area, places=5)
 
-    
+    def testCornerCellSharedFaces(self):
+        """
+        Test that corner cells have exactly 3 shared faces.
+        """
+        cell_id = 0  # Corner cell at (0, 0, 0)
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 3)
+
+    def testEdgeIntersectionCellSharedFaces(self):
+        """
+        Test that cells at the intersection of two boundaries have exactly 4 shared faces.
+        """
+        cell_id = (self.divisions[0])  # Cell at the edge of two boundaries
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 4)
+
+    def testBoundaryCellSharedFaces(self):
+        """
+        Test that boundary cells (not at corners) have exactly 5 shared faces.
+        """
+        cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0]  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 5)
+
+    def testCenterCellSharedFaces(self):
+        """
+        Test that center cells have exactly 6 shared faces.
+        """
+        cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0] + 4  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 6)
