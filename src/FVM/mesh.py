@@ -1,8 +1,5 @@
 import vtk
 import numpy as np
-import h5py
-import numpy as np
-import os
 
 from scipy.spatial import ConvexHull
 from tqdm import tqdm
@@ -20,11 +17,15 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         super().__init__()
         self.sharedCells = []
         self.cellCenters = []
+        self.faces = {}
+        self.faceCenters = {}
+    
 
         # Generate grid points
         self._generateGrid(bounds, divisions)
 
-        # Compute cell centers and neighboring information
+        # Compute cell centers, neighborcell, cell faces
+        self._computeCellFaces()
         self._computeCellCenter()
         self._computeNeighbors()
 
@@ -78,9 +79,9 @@ class StructuredMesh(vtk.vtkStructuredGrid):
             currentCell = self.GetCell(cell_id)
             points = currentCell.GetPoints()
 
-            vertices = [points.GetPoint(i) for i in range(points.GetNumberOfPoints())]
+            vertices = {tuple(points.GetPoint(i)) for i in range(points.GetNumberOfPoints())}
             shared_cells = []
-            shared_vertices = []
+            shared_faces = []
 
             for other_cell_id in range(self.GetNumberOfCells()):
                 if other_cell_id == cell_id:
@@ -88,21 +89,42 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
                 other_cell = self.GetCell(other_cell_id)
                 other_points = other_cell.GetPoints()
-                shared_points = []
+                other_vertices = {tuple(other_points.GetPoint(i)) for i in range(other_points.GetNumberOfPoints())}
+                
+                shared_points = vertices.intersection(other_vertices)
 
-                for i in range(other_points.GetNumberOfPoints()):
-                    if tuple(other_points.GetPoint(i)) in map(tuple, vertices):
-                        shared_points.append(other_points.GetPoint(i))
-
-                if len(shared_points) > 2:  # More than two vertices shared
+                if len(shared_points) > 2:
                     shared_cells.append(other_cell_id)
-                    shared_vertices.append(shared_points)
+                    shared_faces.extend(face_id for face_id, face_points in self.faces.items()
+                                        if set(self.GetPoint(pt) for pt in face_points) == shared_points)
 
             self.sharedCells.append({
                 "cell_id": cell_id,
                 "shared_cells": shared_cells,
-                "shared_vertices": shared_vertices
+                "shared_faces": shared_faces
             })
+
+    def _computeCellFaces(self):
+        face_set = set()
+        face_id = 0
+
+        cell_iter = self.NewCellIterator()
+
+        while not cell_iter.IsDoneWithTraversal():
+            cell = vtk.vtkGenericCell()
+            cell_iter.GetCell(cell)
+            faces = self._extractCellFaces(cell, hexahedron=True)
+
+            for face in faces:
+                face_tuple = tuple(sorted(face))
+                if face_tuple not in face_set:
+                    face_set.add(face_tuple)
+                    self.faces[face_id] = face_tuple
+                    center = np.mean([self.GetPoint(idx) for idx in face_tuple], axis=0)
+                    self.faceCenters[face_id] = tuple(center)
+                    face_id += 1
+
+            cell_iter.GoToNextCell()
 
     def getCellCenter(self, cell_id):
         """
@@ -134,7 +156,69 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         else:
             raise ValueError(f"Cell ID {cell_id} is out of range.")
 
-    def calculateArea(self, vtk_points):
+    def getFaceById(self, face_id):
+        """
+        Retrieve face points by face ID.
+        """
+        return self.faces.get(face_id, None)
+
+    def getFaceByCenter(self, center, tolerance=None):
+        """
+        Retrieve face ID by proximity to a center point, optionally within a tolerance.
+        
+        Args:
+            center (tuple): Target center point.
+            tolerance (float, optional): Distance tolerance. If provided, returns all faces within the tolerance.
+        
+        Returns:
+            int or list: Closest face ID or list of face IDs within the tolerance.
+        """
+        center = np.array(center)
+        distances = {fid: np.linalg.norm(np.array(self.faceCenters[fid]) - center) for fid in self.faceCenters}
+        
+        if tolerance is not None:
+            return [fid for fid, dist in distances.items() if dist <= tolerance]
+        
+        return min(distances, key=distances.get)
+
+    def listFacesByPoint(self, point_id):
+        """
+        Retrieve all faces associated with a given point.
+        """
+        return self.pointFaces.get(point_id, [])        
+
+    def _extractCellFaces(self, cell, hexahedron=False):
+        """
+        Extracts the six faces from a hexahedral cell.
+        Returns a list of 4-point faces using global point IDs from vtkStructuredGrid.
+        Hexahedral Cell Point IDs (VTK Order):
+          7-------6
+         /|      /|
+        4-------5 |
+        | |     | |
+        | 3-----|-2
+        |/      |/
+        0-------1        
+        """
+        point_ids = cell.GetPointIds()
+        
+        hexahedron_faces = [
+            [0, 1, 5, 4],   # -Y Face
+            [1, 2, 6, 5],   # +X Face
+            [2, 3, 7, 6],   # +Y Face
+            [3, 0, 4, 7],   # -X Face
+            [0, 1, 2, 3],   # -Z Face
+            [4, 5, 6, 7]    # +Z Face
+        ]
+
+        faces = hexahedron_faces
+        face_points = []
+        for face in faces:
+            face_points.append([point_ids.GetId(i) for i in face])
+
+        return face_points
+
+    def calculateArea(self, vtk_points, includeNormal=False):
         """
         Calculate the area of a planar polygon using the Shoelace Formula.
 
@@ -179,4 +263,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         y = ordered_points[:, 1]
         area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
-        return area
+        if includeNormal:
+            return area, normal
+        else:
+            return area

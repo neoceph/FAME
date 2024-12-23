@@ -1,6 +1,8 @@
 import os
 import unittest
 import vtk
+import numpy as np
+
 from src.FVM.mesh import StructuredMesh  # Assuming your StructuredMesh is in the same directory as mesh.py
 
 
@@ -9,8 +11,8 @@ class TestStructuredMesh(unittest.TestCase):
         """
         Set up a StructuredMesh object for each test case.
         """
-        self.bounds = ((0, 10), (0, 5), (0, 2))
-        self.divisions = (10, 5, 2)
+        self.bounds = ((0, 10), (0, 5), (0, 3))
+        self.divisions = (10, 5, 3)
         self.mesh = StructuredMesh(self.bounds, self.divisions)
 
     def testMeshInitialization(self):
@@ -26,9 +28,9 @@ class TestStructuredMesh(unittest.TestCase):
         self.assertEqual((div_x, div_y, div_z), self.divisions)
 
         # Verify points are generated
-        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
+        self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 4)
 
-    def test_vertex_initialization(self):
+    def testVertexInitialization(self):
         """
         Test that vertices (points in the mesh) are initialized correctly.
         """
@@ -41,12 +43,21 @@ class TestStructuredMesh(unittest.TestCase):
         # Check the last point in the mesh
         last_point_id = self.mesh.GetNumberOfPoints() - 1
         last_point = self.mesh.GetPoint(last_point_id)
-        expected_last_point = (10.0, 5.0, 2.0)  # Last point in the grid
+        expected_last_point = (10.0, 5.0, 3.0)  # Last point in the grid
         self.assertEqual(last_point, expected_last_point)
 
         # Check the number of points
-        expected_num_points = 11 * 6 * 3
+        expected_num_points = 11 * 6 * 4
         self.assertEqual(self.mesh.GetNumberOfPoints(), expected_num_points)
+
+    def testFaceInitialization(self):
+        """
+        Test that cell faces are computed correctly.
+        """
+        
+        expectedFaces = 3*self.divisions[0]*self.divisions[1]*self.divisions[2] + self.divisions[0]*self.divisions[1] + self.divisions[1]*self.divisions[2] + self.divisions[0]*self.divisions[2]
+        totalFaces = len(self.mesh.faces)
+        self.assertEqual(totalFaces, expectedFaces)
 
     def testComputeCellCenters(self):
         """
@@ -65,17 +76,13 @@ class TestStructuredMesh(unittest.TestCase):
         """
         shared_info = self.mesh.getSharedCellsInfo(0)
         self.assertIn("shared_cells", shared_info)
-        self.assertIn("shared_vertices", shared_info)
 
         # Verify the first cell has neighbors
         shared_cells = shared_info["shared_cells"]
-        shared_vertices = shared_info["shared_vertices"]
         self.assertIsInstance(shared_cells, list)
-        self.assertIsInstance(shared_vertices, list)
 
         # Ensure there is at least one neighbor
         self.assertGreater(len(shared_cells), 0)
-        self.assertGreater(len(shared_vertices), 0)
 
     def testMeshSharedCellsIteration(self):
         """
@@ -84,13 +91,10 @@ class TestStructuredMesh(unittest.TestCase):
         cell_id = 0
         shared_info = self.mesh.getSharedCellsInfo(cell_id)
         shared_cells = shared_info["shared_cells"]
-        shared_vertices = shared_info["shared_vertices"]
 
         # Verify that shared cells and vertices can be iterated
-        for shared_cell, vertices in zip(shared_cells, shared_vertices):
+        for shared_cell in shared_cells:
             self.assertIsInstance(shared_cell, int)
-            self.assertIsInstance(vertices, list)
-            self.assertGreater(len(vertices), 2)  # More than two vertices are shared
 
     def testTriangleArea(self):
         """
@@ -244,22 +248,94 @@ class TestStructuredMesh(unittest.TestCase):
         cell_id = 0  # Choose a cell ID
         shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
 
-        # Iterate over shared cells and compute area of the shared face
-        for shared_cell, shared_vertices in zip(shared_cells_info["shared_cells"], shared_cells_info["shared_vertices"]):
-            points = vtk.vtkPoints()
+        # Iterate over shared faces and compute area
+        for face_id in shared_cells_info["shared_faces"]:
+            face_points = vtk.vtkPoints()
 
-            # Add shared vertices to the vtkPoints object
-            for vertex in shared_vertices:
-                points.InsertNextPoint(vertex)
+            # Retrieve the points of the shared face
+            for vertex_id in self.mesh.faces[face_id]:
+                face_points.InsertNextPoint(self.mesh.GetPoint(vertex_id))
 
             # Calculate the area using the calculateArea method
-            area = self.mesh.calculateArea(points)
+            area = self.mesh.calculateArea(face_points)
 
             # For a structured grid with uniform spacing, validate expected area
             expected_area = 1.0  # Assume uniform cell face spacing for this test
             self.assertAlmostEqual(area, expected_area, places=5)
-    
 
+    def testCornerCellSharedFaces(self):
+        """
+        Test that corner cells have exactly 3 shared faces.
+        """
+        cell_id = 0  # Corner cell at (0, 0, 0)
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 3)
 
-if __name__ == "__main__":
-    unittest.main()
+    def testEdgeIntersectionCellSharedFaces(self):
+        """
+        Test that cells at the intersection of two boundaries have exactly 4 shared faces.
+        """
+        cell_id = (self.divisions[0])  # Cell at the edge of two boundaries
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 4)
+
+    def testBoundaryCellSharedFaces(self):
+        """
+        Test that boundary cells (not at corners) have exactly 5 shared faces.
+        """
+        cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0]  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 5)
+
+    def testCenterCellSharedFaces(self):
+        """
+        Test that center cells have exactly 6 shared faces.
+        """
+        cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0] + 4  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
+        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+        self.assertEqual(len(shared_cells_info["shared_faces"]), 6)
+
+    def testGetFaceById(self):
+        """
+        Test that getFaceById correctly retrieves face points.
+        """
+        face_id = 0  # Test first face
+        face_points = self.mesh.getFaceById(face_id)
+        
+        self.assertIsNotNone(face_points)
+        self.assertEqual(len(face_points), 4)  # A hexahedral face should have 4 points
+        
+        # Validate that the points correspond to valid mesh points
+        for pointId in face_points:
+            point = self.mesh.GetPoint(pointId)
+            self.assertIsInstance(point, tuple)
+            self.assertEqual(len(point), 3)
+
+    def testGetFaceByCenter(self):
+        """
+        Test that getFaceByCenter correctly retrieves the nearest face ID.
+        """
+        firstFaceCenter = list(self.mesh.faceCenters.values())[0]
+        faceId = self.mesh.getFaceByCenter(firstFaceCenter)
+        
+        self.assertIn(faceId, self.mesh.faces)
+        retrieved_center = np.array(self.mesh.faceCenters[faceId])
+        
+        np.testing.assert_array_almost_equal(firstFaceCenter, retrieved_center, decimal=5)
+
+    def testGetFaceByCenterWithTolerance(self):
+        """
+        Test that getFaceByCenter retrieves all faces within a given tolerance.
+        """
+        test_point = (0.5, 0.5, 0.5)
+        tolerance = 0.6
+        faceIDs = self.mesh.getFaceByCenter(test_point, tolerance=tolerance)
+        
+        self.assertIsInstance(faceIDs, list)
+        self.assertGreater(len(faceIDs), 0)
+
+        # Validate that all returned faces are within the tolerance distance
+        for face_id in faceIDs:
+            face_center = np.array(self.mesh.faceCenters[face_id])
+            distance = np.linalg.norm(face_center - np.array(test_point))
+            self.assertLessEqual(distance, tolerance)

@@ -29,12 +29,18 @@ class TestMeshWriter(unittest.TestCase):
 
     def testSteadyState(self):
         """
-        Test writing steady-state scalar, vector, and tensor fields.
+        Test writing steady-state scalar, vector, and tensor fields for points and cells.
         """
+        num_points = self.mesh.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
+
         variables = {
-            "temperature": np.random.rand(self.mesh.GetNumberOfPoints()),  # Scalar
-            "velocity": np.random.rand(self.mesh.GetNumberOfPoints(), 3),  # Vector
-            "stressTensor": np.random.rand(self.mesh.GetNumberOfPoints(), 9)  # Tensor
+            "temperature_point": np.random.rand(num_points),  # Scalar at points
+            "velocity_point": np.random.rand(num_points, 3),  # Vector at points
+            "stressTensor_point": np.random.rand(num_points, 9),  # Tensor at points
+            "temperature_cell": np.random.rand(num_cells),  # Scalar at cells
+            "velocity_cell": np.random.rand(num_cells, 3),  # Vector at cells
+            "stressTensor_cell": np.random.rand(num_cells, 9)  # Tensor at cells
         }
         self.writer.writeVTS(self.outputDir, variables)
 
@@ -46,14 +52,20 @@ class TestMeshWriter(unittest.TestCase):
 
     def testTransientState(self):
         """
-        Test writing transient-state scalar, vector, and tensor fields for multiple timesteps.
+        Test writing transient-state scalar, vector, and tensor fields for points and cells.
         """
         timeSteps = [0.0, 1.0, 2.0]
+        num_points = self.mesh.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
+
         for step, time in enumerate(timeSteps):
             variables = {
-                "temperature": np.random.rand(self.mesh.GetNumberOfPoints()),  # Scalar
-                "velocity": np.random.rand(self.mesh.GetNumberOfPoints(), 3),  # Vector
-                "stressTensor": np.random.rand(self.mesh.GetNumberOfPoints(), 9)  # Tensor
+                "temperature_point": np.random.rand(num_points),
+                "velocity_point": np.random.rand(num_points, 3),
+                "stressTensor_point": np.random.rand(num_points, 9),
+                "temperature_cell": np.random.rand(num_cells),
+                "velocity_cell": np.random.rand(num_cells, 3),
+                "stressTensor_cell": np.random.rand(num_cells, 9)
             }
             self.writer.writeVTS(self.outputDir, variables, time=time, step=step)
 
@@ -91,53 +103,59 @@ class TestMeshWriter(unittest.TestCase):
         self.assertTrue(os.path.exists(pvdFile), "PVD file not created for steady-state with fixed values.")
         self.assertTrue(os.path.exists(vtsFile), "VTS file not created for steady-state with fixed values.")
 
-    def testTransientStateWithFixedValues(self):
+    def testSteadyStateWithFixedValues(self):
         """
-        Test writing transient-state data with fixed scalar, vector, and tensor fields for multiple timesteps.
+        Test writing steady-state data with fixed scalar, vector, and tensor fields for points and cells.
         """
-        scalar_values = [100, 200, 300]  # Different temperature for each timestep
-        vector_values = [
-            np.full((self.mesh.GetNumberOfPoints(), 3), i) for i in range(3)
-        ]  # Velocity changes for each timestep
-        tensor_values = [
-            np.tile(np.eye(3).flatten() * i, (self.mesh.GetNumberOfPoints(), 1)) for i in range(1, 4)
-        ]  # Tensor values scaled by timestep
+        num_points = self.mesh.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
 
-        timeSteps = [0.0, 1.0, 2.0]
-        for step, time in enumerate(timeSteps):
-            variables = {
-                "temperature": np.ones(self.mesh.GetNumberOfPoints()) * scalar_values[step],  # Scalar
-                "velocity": vector_values[step],  # Vector
-                "stressTensor": tensor_values[step]  # Tensor
-            }
-            self.writer.writeVTS(self.outputDir, variables, time=time, step=step)
+        scalar_point = np.ones(num_points) * 100  # Scalar at points
+        vector_point = np.zeros((num_points, 3))  # Vector at points
+        tensor_point = np.tile(np.eye(3).flatten(), (num_points, 1))  # Tensor at points
+
+        scalar_cell = np.ones(num_cells) * 200  # Scalar at cells
+        vector_cell = np.zeros((num_cells, 3))  # Vector at cells
+        tensor_cell = np.tile(np.eye(3).flatten(), (num_cells, 1))  # Tensor at cells
+
+        variables = {
+            "temperature_point": scalar_point,
+            "velocity_point": vector_point,
+            "stressTensor_point": tensor_point,
+            "temperature_cell": scalar_cell,
+            "velocity_cell": vector_cell,
+            "stressTensor_cell": tensor_cell
+        }
+        self.writer.writeVTS(self.outputDir, variables)
 
         pvdFile = os.path.join(self.outputDir, f"{os.path.basename(self.outputDir)}.pvd")
-        self.assertTrue(os.path.exists(pvdFile), "PVD file not created for transient-state with fixed values.")
+        vtsFile = os.path.join(self.outputDir, "output_0000.vts")
 
-        for step in range(len(timeSteps)):
-            vtsFile = os.path.join(self.outputDir, f"output_{step:04d}.vts")
-            self.assertTrue(os.path.exists(vtsFile), f"VTS file not created for timestep {step} with fixed values.")
-
-        with open(pvdFile, 'r') as f:
-            pvdContent = f.read()
-        for step, time in enumerate(timeSteps):
-            self.assertIn(f'timestep="{time}"', pvdContent, f"Time {time} not recorded in PVD file.")
-            self.assertIn(f'output_{step:04d}.vts', pvdContent, f"File output_{step:04d}.vts not recorded in PVD file.")
+        self.assertTrue(os.path.exists(pvdFile), "PVD file not created for steady-state with fixed values.")
+        self.assertTrue(os.path.exists(vtsFile), "VTS file not created for steady-state with fixed values.")
 
     def testSteadyStateWithIncreasingValues(self):
         """
-        Test writing steady-state data with monotonously increasing scalar, vector, and tensor fields.
+        Test writing steady-state data with monotonously increasing scalar, vector, and tensor fields for points and cells.
         """
         num_points = self.mesh.GetNumberOfPoints()
-        scalar = np.arange(1, num_points + 1)  # Scalar: monotonically increasing values
-        vector = np.tile(np.arange(1, 4), (num_points, 1))  # Vector: same (1, 2, 3) for all points
-        tensor = np.tile(np.arange(1, 10), (num_points, 1))  # Tensor: same [1, ..., 9] for all points
+        num_cells = self.mesh.GetNumberOfCells()
+
+        scalar_point = np.arange(1, num_points + 1)  # Increasing scalar at points
+        vector_point = np.tile(np.arange(1, 4), (num_points, 1))  # Vector at points
+        tensor_point = np.tile(np.arange(1, 10), (num_points, 1))  # Tensor at points
+
+        scalar_cell = np.arange(1, num_cells + 1)  # Increasing scalar at cells
+        vector_cell = np.tile(np.arange(1, 4), (num_cells, 1))  # Vector at cells
+        tensor_cell = np.tile(np.arange(1, 10), (num_cells, 1))  # Tensor at cells
 
         variables = {
-            "temperature": scalar,
-            "velocity": vector,
-            "stressTensor": tensor
+            "temperature_point": scalar_point,
+            "velocity_point": vector_point,
+            "stressTensor_point": tensor_point,
+            "temperature_cell": scalar_cell,
+            "velocity_cell": vector_cell,
+            "stressTensor_cell": tensor_cell
         }
         self.writer.writeVTS(self.outputDir, variables)
 
@@ -149,20 +167,28 @@ class TestMeshWriter(unittest.TestCase):
 
     def testTransientStateWithIncreasingValues(self):
         """
-        Test writing transient-state data with monotonously increasing scalar, vector, and tensor fields for multiple timesteps.
+        Test writing transient-state data with monotonously increasing scalar, vector, and tensor fields for points and cells.
         """
         num_points = self.mesh.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
         timeSteps = [0.0, 1.0, 2.0]
 
         for step, time in enumerate(timeSteps):
-            scalar = np.arange(step * num_points + 1, (step + 1) * num_points + 1)  # Scalar: different range for each step
-            vector = np.tile(np.arange(step + 1, step + 4), (num_points, 1))  # Vector: step-dependent (step+1, step+2, step+3)
-            tensor = np.tile(np.arange(step + 1, step + 10), (num_points, 1))  # Tensor: step-dependent [step+1, ..., step+9]
+            scalar_point = np.arange(step * num_points + 1, (step + 1) * num_points + 1)
+            vector_point = np.tile(np.arange(step + 1, step + 4), (num_points, 1))
+            tensor_point = np.tile(np.arange(step + 1, step + 10), (num_points, 1))
+
+            scalar_cell = np.arange(step * num_cells + 1, (step + 1) * num_cells + 1)
+            vector_cell = np.tile(np.arange(step + 1, step + 4), (num_cells, 1))
+            tensor_cell = np.tile(np.arange(step + 1, step + 10), (num_cells, 1))
 
             variables = {
-                "temperature": scalar,
-                "velocity": vector,
-                "stressTensor": tensor
+                "temperature_point": scalar_point,
+                "velocity_point": vector_point,
+                "stressTensor_point": tensor_point,
+                "temperature_cell": scalar_cell,
+                "velocity_cell": vector_cell,
+                "stressTensor_cell": tensor_cell
             }
             self.writer.writeVTS(self.outputDir, variables, time=time, step=step)
 
@@ -181,39 +207,42 @@ class TestMeshWriter(unittest.TestCase):
 
     def testAppendPVD(self):
         """
-        Test appending to an existing .pvd file and adding a new .vts file.
+        Test appending to an existing .pvd file and adding a new .vts file for points and cells.
         """
-        # Initial variables for timestep 0
-        variables_step0 = {
-            "temperature": np.ones(self.mesh.GetNumberOfPoints()) * 100,  # Scalar
-            "velocity": np.zeros((self.mesh.GetNumberOfPoints(), 3)),  # Vector
-            "stressTensor": np.tile(np.eye(3).flatten(), (self.mesh.GetNumberOfPoints(), 1))  # Tensor
-        }
+        num_points = self.mesh.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
 
-        # Write the initial .pvd and .vts files
+        # Initial timestep 0
+        variables_step0 = {
+            "temperature_point": np.ones(num_points) * 100,
+            "velocity_point": np.zeros((num_points, 3)),
+            "stressTensor_point": np.tile(np.eye(3).flatten(), (num_points, 1)),
+            "temperature_cell": np.ones(num_cells) * 150,
+            "velocity_cell": np.zeros((num_cells, 3)),
+            "stressTensor_cell": np.tile(np.eye(3).flatten(), (num_cells, 1))
+        }
         self.writer.writeVTS(self.outputDir, variables_step0)
 
-        # Verify initial .pvd and .vts file creation
         pvdFile = os.path.join(self.outputDir, f"{os.path.basename(self.outputDir)}.pvd")
         vtsFileStep0 = os.path.join(self.outputDir, "output_0000.vts")
         self.assertTrue(os.path.exists(pvdFile), "PVD file not created for initial timestep.")
         self.assertTrue(os.path.exists(vtsFileStep0), "VTS file not created for initial timestep.")
 
-        # New variables for timestep 1
+        # Timestep 1 - Append new data
         variables_step1 = {
-            "temperature": np.ones(self.mesh.GetNumberOfPoints()) * 200,  # Scalar
-            "velocity": np.ones((self.mesh.GetNumberOfPoints(), 3)) * 10,  # Vector
-            "stressTensor": np.tile((np.eye(3) * 2).flatten(), (self.mesh.GetNumberOfPoints(), 1))  # Tensor
+            "temperature_point": np.ones(num_points) * 200,
+            "velocity_point": np.ones((num_points, 3)) * 10,
+            "stressTensor_point": np.tile((np.eye(3) * 2).flatten(), (num_points, 1)),
+            "temperature_cell": np.ones(num_cells) * 250,
+            "velocity_cell": np.ones((num_cells, 3)) * 5,
+            "stressTensor_cell": np.tile((np.eye(3) * 2).flatten(), (num_cells, 1))
         }
-
-        # Append to the existing .pvd file and add a new .vts file
         self.writer.writeVTS(self.outputDir, variables_step1, time=1.0, step=1)
 
-        # Verify new .vts file creation
         vtsFileStep1 = os.path.join(self.outputDir, "output_0001.vts")
         self.assertTrue(os.path.exists(vtsFileStep1), "VTS file not created for appended timestep.")
 
-        # Verify .pvd file content
+        # Verify PVD contents
         with open(pvdFile, 'r') as f:
             pvdContent = f.read()
         self.assertIn('output_0000.vts', pvdContent, "Initial timestep not recorded in PVD file.")
