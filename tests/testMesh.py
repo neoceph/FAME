@@ -1,6 +1,8 @@
 import os
 import unittest
 import vtk
+import numpy as np
+
 from src.FVM.mesh import StructuredMesh  # Assuming your StructuredMesh is in the same directory as mesh.py
 
 
@@ -292,3 +294,48 @@ class TestStructuredMesh(unittest.TestCase):
         cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0] + 4  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
         shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
         self.assertEqual(len(shared_cells_info["shared_faces"]), 6)
+
+    def testGetFaceById(self):
+        """
+        Test that getFaceById correctly retrieves face points.
+        """
+        face_id = 0  # Test first face
+        face_points = self.mesh.getFaceById(face_id)
+        
+        self.assertIsNotNone(face_points)
+        self.assertEqual(len(face_points), 4)  # A hexahedral face should have 4 points
+        
+        # Validate that the points correspond to valid mesh points
+        for pointId in face_points:
+            point = self.mesh.GetPoint(pointId)
+            self.assertIsInstance(point, tuple)
+            self.assertEqual(len(point), 3)
+
+    def testGetFaceByCenter(self):
+        """
+        Test that getFaceByCenter correctly retrieves the nearest face ID.
+        """
+        firstFaceCenter = list(self.mesh.faceCenters.values())[0]
+        faceId = self.mesh.getFaceByCenter(firstFaceCenter)
+        
+        self.assertIn(faceId, self.mesh.faces)
+        retrieved_center = np.array(self.mesh.faceCenters[faceId])
+        
+        np.testing.assert_array_almost_equal(firstFaceCenter, retrieved_center, decimal=5)
+
+    def testGetFaceByCenterWithTolerance(self):
+        """
+        Test that getFaceByCenter retrieves all faces within a given tolerance.
+        """
+        test_point = (0.5, 0.5, 0.5)
+        tolerance = 0.6
+        faceIDs = self.mesh.getFaceByCenter(test_point, tolerance=tolerance)
+        
+        self.assertIsInstance(faceIDs, list)
+        self.assertGreater(len(faceIDs), 0)
+
+        # Validate that all returned faces are within the tolerance distance
+        for face_id in faceIDs:
+            face_center = np.array(self.mesh.faceCenters[face_id])
+            distance = np.linalg.norm(face_center - np.array(test_point))
+            self.assertLessEqual(distance, tolerance)

@@ -162,12 +162,24 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         """
         return self.faces.get(face_id, None)
 
-    def getFaceByCenter(self, center):
+    def getFaceByCenter(self, center, tolerance=None):
         """
-        Retrieve face ID by proximity to a center point.
+        Retrieve face ID by proximity to a center point, optionally within a tolerance.
+        
+        Args:
+            center (tuple): Target center point.
+            tolerance (float, optional): Distance tolerance. If provided, returns all faces within the tolerance.
+        
+        Returns:
+            int or list: Closest face ID or list of face IDs within the tolerance.
         """
         center = np.array(center)
-        return min(self.faceCenters, key=lambda fid: np.linalg.norm(np.array(self.faceCenters[fid]) - center))
+        distances = {fid: np.linalg.norm(np.array(self.faceCenters[fid]) - center) for fid in self.faceCenters}
+        
+        if tolerance is not None:
+            return [fid for fid, dist in distances.items() if dist <= tolerance]
+        
+        return min(distances, key=distances.get)
 
     def listFacesByPoint(self, point_id):
         """
