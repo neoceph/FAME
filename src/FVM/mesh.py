@@ -81,7 +81,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
             vertices = {tuple(points.GetPoint(i)) for i in range(points.GetNumberOfPoints())}
             shared_cells = []
-            shared_faces = []
+            shared_faces = set()
 
             for other_cell_id in range(self.GetNumberOfCells()):
                 if other_cell_id == cell_id:
@@ -95,13 +95,21 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
                 if len(shared_points) > 2:
                     shared_cells.append(other_cell_id)
-                    shared_faces.extend(face_id for face_id, face_points in self.faces.items()
+                    shared_faces.update(face_id for face_id, face_points in self.faces.items()
                                         if set(self.GetPoint(pt) for pt in face_points) == shared_points)
+
+            # Identify boundary faces by subtracting shared faces from all faces of the cell
+            all_faces = {
+                face_id for face_id, face_points in self.faces.items()
+                if set(self.GetPoint(pt) for pt in face_points).issubset(vertices)
+            }
+            boundary_faces = all_faces - shared_faces
 
             self.sharedCells.append({
                 "cell_id": cell_id,
                 "shared_cells": shared_cells,
-                "shared_faces": shared_faces
+                "shared_faces": list(shared_faces),
+                "boundary_faces": list(boundary_faces)
             })
 
     def _computeCellFaces(self):
