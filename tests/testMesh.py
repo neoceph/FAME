@@ -28,7 +28,7 @@ class TestStructuredMesh(unittest.TestCase):
         # Verify points are generated
         self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 3)
 
-    def test_vertex_initialization(self):
+    def testVertexInitialization(self):
         """
         Test that vertices (points in the mesh) are initialized correctly.
         """
@@ -48,6 +48,15 @@ class TestStructuredMesh(unittest.TestCase):
         expected_num_points = 11 * 6 * 3
         self.assertEqual(self.mesh.GetNumberOfPoints(), expected_num_points)
 
+    def testFaceInitialization(self):
+        """
+        Test that cell faces are computed correctly.
+        """
+        
+        expectedFaces = 3*self.divisions[0]*self.divisions[1]*self.divisions[2] + self.divisions[0]*self.divisions[1] + self.divisions[1]*self.divisions[2] + self.divisions[0]*self.divisions[2]
+        totalFaces = len(self.mesh.faces)
+        self.assertEqual(totalFaces, expectedFaces)
+
     def testComputeCellCenters(self):
         """
         Test that cell centers are computed correctly.
@@ -65,17 +74,13 @@ class TestStructuredMesh(unittest.TestCase):
         """
         shared_info = self.mesh.getSharedCellsInfo(0)
         self.assertIn("shared_cells", shared_info)
-        self.assertIn("shared_vertices", shared_info)
 
         # Verify the first cell has neighbors
         shared_cells = shared_info["shared_cells"]
-        shared_vertices = shared_info["shared_vertices"]
         self.assertIsInstance(shared_cells, list)
-        self.assertIsInstance(shared_vertices, list)
 
         # Ensure there is at least one neighbor
         self.assertGreater(len(shared_cells), 0)
-        self.assertGreater(len(shared_vertices), 0)
 
     def testMeshSharedCellsIteration(self):
         """
@@ -84,13 +89,10 @@ class TestStructuredMesh(unittest.TestCase):
         cell_id = 0
         shared_info = self.mesh.getSharedCellsInfo(cell_id)
         shared_cells = shared_info["shared_cells"]
-        shared_vertices = shared_info["shared_vertices"]
 
         # Verify that shared cells and vertices can be iterated
-        for shared_cell, vertices in zip(shared_cells, shared_vertices):
+        for shared_cell in shared_cells:
             self.assertIsInstance(shared_cell, int)
-            self.assertIsInstance(vertices, list)
-            self.assertGreater(len(vertices), 2)  # More than two vertices are shared
 
     def testTriangleArea(self):
         """
@@ -237,29 +239,26 @@ class TestStructuredMesh(unittest.TestCase):
         expected_area = 1.0
         self.assertAlmostEqual(area, expected_area, places=5)
 
-    def testSharedCellArea(self):
-        """
-        Test that the area of a shared face between two cells is computed correctly using the calculateArea method.
-        """
-        cell_id = 0  # Choose a cell ID
-        shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
+def testSharedCellArea(self):
+    """
+    Test that the area of a shared face between two cells is computed correctly using the calculateArea method.
+    """
+    cell_id = 0  # Choose a cell ID
+    shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
 
-        # Iterate over shared cells and compute area of the shared face
-        for shared_cell, shared_vertices in zip(shared_cells_info["shared_cells"], shared_cells_info["shared_vertices"]):
-            points = vtk.vtkPoints()
+    # Iterate over shared faces and compute area
+    for face_id in shared_cells_info["shared_faces"]:
+        face_points = vtk.vtkPoints()
 
-            # Add shared vertices to the vtkPoints object
-            for vertex in shared_vertices:
-                points.InsertNextPoint(vertex)
+        # Retrieve the points of the shared face
+        for vertex_id in self.mesh.faces[face_id]:
+            face_points.InsertNextPoint(self.mesh.GetPoint(vertex_id))
 
-            # Calculate the area using the calculateArea method
-            area = self.mesh.calculateArea(points)
+        # Calculate the area using the calculateArea method
+        area = self.mesh.calculateArea(face_points)
 
-            # For a structured grid with uniform spacing, validate expected area
-            expected_area = 1.0  # Assume uniform cell face spacing for this test
-            self.assertAlmostEqual(area, expected_area, places=5)
+        # For a structured grid with uniform spacing, validate expected area
+        expected_area = 1.0  # Assume uniform cell face spacing for this test
+        self.assertAlmostEqual(area, expected_area, places=5)
+
     
-
-
-if __name__ == "__main__":
-    unittest.main()
