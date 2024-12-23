@@ -30,55 +30,40 @@ class MeshWriter:
         if not hasattr(self.mesh, 'dimensions') or not hasattr(self.mesh, 'GetPoints'):
             raise ValueError("The provided mesh must have 'dimensions' and 'GetPoints' attributes.")
 
-        nx, ny, nz = self.mesh.dimensions
         points = self.mesh.GetPoints()
-        if points.GetNumberOfPoints() != nx * ny * nz:
-            raise ValueError("Mismatch between vtkPoints size and grid dimensions.")
+        num_points = points.GetNumberOfPoints()
+        num_cells = self.mesh.GetNumberOfCells()
+
+        if not points or num_points == 0:
+            raise ValueError("The provided mesh must have valid vtkPoints.")
 
         for var_name, var_data in variables.items():
+            var_array = vtk.vtkDoubleArray()
+            var_array.SetName(var_name)
+
+            if var_data.shape[0] == num_points:
+                # Write to point data
+                target = self.mesh.GetPointData()
+            elif var_data.shape[0] == num_cells:
+                # Write to cell data
+                target = self.mesh.GetCellData()
+            else:
+                raise ValueError(
+                    f"Mismatch between '{var_name}' size and grid dimensions. "
+                    f"Expected {num_points} for points or {num_cells} for cells."
+                )
+
+            # Set number of components for scalar, vector, or tensor data
             if var_data.ndim == 1:
-                if var_data.size != nx * ny * nz:
-                    raise ValueError(f"Mismatch between scalar field '{var_name}' size and grid dimensions.")
-                var_array = vtk.vtkDoubleArray()
-                var_array.SetName(var_name)
+                var_array.SetNumberOfComponents(1)  # Explicit for scalar
                 for value in var_data:
                     var_array.InsertNextValue(value)
-                self.mesh.GetPointData().AddArray(var_array)
-            elif var_data.ndim >= 2:
-                if var_data.shape[0] != nx * ny * nz:
-                    raise ValueError(f"Mismatch between field '{var_name}' size and grid dimensions.")
-                if var_data.shape[1] == 2:
-                    var_array = vtk.vtkDoubleArray()
-                    var_array.SetName(var_name)
-                    var_array.SetNumberOfComponents(2)
-                    for value in var_data:
-                        var_array.InsertNextTuple(value)
-                    self.mesh.GetPointData().AddArray(var_array)
-                elif var_data.shape[1] == 3:
-                    var_array = vtk.vtkDoubleArray()
-                    var_array.SetName(var_name)
-                    var_array.SetNumberOfComponents(3)
-                    for value in var_data:
-                        var_array.InsertNextTuple(value)
-                    self.mesh.GetPointData().AddArray(var_array)
-                elif var_data.shape[1] == 4:
-                    var_array = vtk.vtkDoubleArray()
-                    var_array.SetName(var_name)
-                    var_array.SetNumberOfComponents(4)
-                    for value in var_data:
-                        var_array.InsertNextTuple(value)
-                    self.mesh.GetPointData().AddArray(var_array)
-                elif var_data.shape[1] == 9:
-                    var_array = vtk.vtkDoubleArray()
-                    var_array.SetName(var_name)
-                    var_array.SetNumberOfComponents(9)
-                    for value in var_data:
-                        var_array.InsertNextTuple(value)
-                    self.mesh.GetPointData().AddArray(var_array)
-                else:
-                    raise ValueError(f"Unsupported number of components for field '{var_name}': {var_data.shape[1]}")
             else:
-                raise ValueError(f"Unsupported data dimensions for variable '{var_name}': {var_data.ndim}")
+                var_array.SetNumberOfComponents(var_data.shape[1])  # Vector or tensor
+                for value in var_data:
+                    var_array.InsertNextTuple(value)
+
+            target.AddArray(var_array)
 
         writer = vtk.vtkXMLStructuredGridWriter()
         writer.SetFileName(output_file)
