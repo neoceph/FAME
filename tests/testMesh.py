@@ -339,3 +339,23 @@ class TestStructuredMesh(unittest.TestCase):
             face_center = np.array(self.mesh.faceCenters[face_id])
             distance = np.linalg.norm(face_center - np.array(test_point))
             self.assertLessEqual(distance, tolerance)
+
+    def testCellVolumeCalculation(self):
+        """
+        Test that the volume of a cell is calculated correctly using the Gauss Divergence Theorem.
+        """
+        num_cells = self.mesh.GetNumberOfCells()
+        
+        # Iterate over all cells and calculate their volume
+        for cell_id in range(num_cells):
+            volume = self.mesh.getCellVolume(cell_id)
+            
+            # Expected volume for structured hexahedral grid cells
+            dx = (self.bounds[0][1] - self.bounds[0][0]) / self.divisions[0]
+            dy = (self.bounds[1][1] - self.bounds[1][0]) / self.divisions[1]
+            dz = (self.bounds[2][1] - self.bounds[2][0]) / self.divisions[2]
+            
+            expected_volume = dx * dy * dz
+            
+            # Assert that the calculated volume matches the expected value
+            self.assertAlmostEqual(volume, expected_volume, places=5, msg=f"Mismatch in volume for cell {cell_id}")

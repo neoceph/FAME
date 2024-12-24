@@ -65,73 +65,95 @@ Now
         \Rightarrow & \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]T_{j} -\sum_{j=1}^n\left[\left(\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right) + S_i  \right]T_{i} & = -S_u \\    
     \end{aligned}
 
-Here considering a list of shared cells are :math:`\mathcal{J}` for a given cell :math:`i` 
+Here considering a list of shared cells are :math:`\mathcal{J}` for a given cell :math:`i` and :math:`j` is the index of the shared cells.
 
 .. math::
     \begin{aligned}
-        a_{ij} &= \sum_{j \in \mathcal{J}}\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right] \\
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
         a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] - S_i \\
         b_{i} &= -[S_u]_{i} \\
     \end{aligned}
 
-Discretized Equation
+Boundary Conditions
 ---------------------
 
-For a structured grid, the discrete form in 3D becomes:
+The elements of the sparse matrix changes slightly when boundary conditions are handled.
+
+1. Dirichlet Boundary Condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`b` for a cell indexed with :math:`i`
 
 .. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2}\right] - S_i \quad \forall b \in \mathcal{J, B} \\
+        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
+    \end{aligned}
 
-    a_P T_P = a_E T_E + a_W T_W + a_N T_N + a_S T_S + a_T T_T + a_B T_B + b
+2. Neumann Boundary Condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If a boundary surface is kept at :math:`T_\infty` with a convective coefficient :math:`h`, the equation becomes:
 
-where:
+.. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}A_{i \leftrightarrow b}\left[\frac{k_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} + h \right] - S_i \quad \forall b \in \mathcal{J, B} \\
+        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b - hA_{i \leftrightarrow b} \cdot T_{\infty}, \quad \forall k \in \mathcal{B} \\
+    \end{aligned}
 
-- :math:`a_P` is the coefficient for the central node (:math:`P`).
-- :math:`a_E, a_W, a_N, a_S, a_T, a_B` are the coefficients for the neighboring nodes (East, West, North, South, Top, Bottom).
-- :math:`T_E, T_W, T_N, T_S, T_T, T_B` are the temperatures at neighboring nodes.
-- :math:`b` is the linearized source term.
+If a boundary is kept at a fixed temperature :math:`T_s` then :math:`T_b = T_b`, but if the surface is allowed to convect :math:`T_b=0`.
 
-Coefficients
+Generalization
 ------------
 
-The coefficients are defined as:
+The following equations are the general form of heat diffusion equation. Notice :math:`q_i` as the source heat per unit volume and :math:`\delta V` as the volume of the cell.
 
 .. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}A_{i \leftrightarrow b}\left[\frac{k_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} + h \right] - S_i \quad \forall b \in \mathcal{J, B} \\
+        b_{i} &= -[S_u]_{i} - q_{i} \cdot \delta V - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b - hA_{i \leftrightarrow b} \cdot T_{\infty}, \quad \forall k \in \mathcal{B} \\
+    \end{aligned}
 
-    a_P = \sum_{nb} a_{nb} - S_P
+These equation covers all the cases and reduces to desired formulation
 
-.. math::
-
-    a_{nb} = \frac{k A}{\Delta x_{nb}}
-
-.. math::
-
-    b = S_U \Delta V
-
-where:
-
-- :math:`k` is the thermal conductivity.
-- :math:`A` is the face area of the control volume.
-- :math:`\Delta x_{nb}` is the distance between node P and its neighbor.
-- :math:`S_P` and :math:`S_U` are the linearized source term coefficients.
-- :math:`\Delta V` is the control volume size.
-
-Linearized Source Term
-----------------------
-
-The source term :math:`S_T` can be linearized as:
+1. If :math:`h=0`, equation takes the Dirichlet BC form.
 
 .. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \right] - S_i \quad \forall b \in \mathcal{J, B} \\
+        b_{i} &= -[S_u]_{i} - q_{i} \cdot \delta V - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
+    \end{aligned}
 
-    S_T = S_U + S_P T_P
+2. If no internal heat generation, i.e. :math:`q_i = 0`, then takes generalized Dirichlet BC form
 
-where:
+.. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \right] - S_i \quad \forall b \in \mathcal{J, B} \\
+        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
+    \end{aligned}
 
-- :math:`S_U` represents the constant part of the source term.
-- :math:`S_P` represents the coefficient of the temperature at the central node.
+3. If the cell under consideration is fully internal i.e. not sharing any of the faces with the boundary, the equation takes the generic formulation where fluxes aree coming fromm all of the faces.
 
-Substituting the linearized source term into the discretized equation modifies the central coefficient :math:`a_P` and the constant term :math:`b` as shown above.
+.. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -S_i \\
+        b_{i} &= -[S_u]_{i}  \\
+    \end{aligned}
+
+4. If there are no dependent source term or independent source term i.e. :math:`S_i=0` and :math:`S_u=0`
+
+.. math::
+    \begin{aligned}
+        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
+        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] \\
+        b_{i} &= 0  \\
+    \end{aligned}
 
 Summary
 -------
 
-The finite volume discretization of the heat diffusion equation provides a robust framework for solving heat transfer problems in three dimensions, with linearized source terms ensuring computational efficiency and stability.
+The finite volume discretization of the heat diffusion equation is formulated in a comprehensive fashion considering Dirichlet, Neumann, Heat generation.

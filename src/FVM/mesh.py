@@ -81,7 +81,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
             vertices = {tuple(points.GetPoint(i)) for i in range(points.GetNumberOfPoints())}
             shared_cells = []
-            shared_faces = []
+            shared_faces = set()
 
             for other_cell_id in range(self.GetNumberOfCells()):
                 if other_cell_id == cell_id:
@@ -95,13 +95,21 @@ class StructuredMesh(vtk.vtkStructuredGrid):
 
                 if len(shared_points) > 2:
                     shared_cells.append(other_cell_id)
-                    shared_faces.extend(face_id for face_id, face_points in self.faces.items()
+                    shared_faces.update(face_id for face_id, face_points in self.faces.items()
                                         if set(self.GetPoint(pt) for pt in face_points) == shared_points)
+
+            # Identify boundary faces by subtracting shared faces from all faces of the cell
+            all_faces = {
+                face_id for face_id, face_points in self.faces.items()
+                if set(self.GetPoint(pt) for pt in face_points).issubset(vertices)
+            }
+            boundary_faces = all_faces - shared_faces
 
             self.sharedCells.append({
                 "cell_id": cell_id,
                 "shared_cells": shared_cells,
-                "shared_faces": shared_faces
+                "shared_faces": list(shared_faces),
+                "boundary_faces": list(boundary_faces)
             })
 
     def _computeCellFaces(self):
@@ -267,3 +275,37 @@ class StructuredMesh(vtk.vtkStructuredGrid):
             return area, normal
         else:
             return area
+
+    def getCellVolume(self, cell_id):
+        """
+        Calculate the volume of a cell using the Gauss Divergence Theorem.
+
+        Args:
+            cell_id (int): ID of the cell.
+
+        Returns:
+            float: Volume of the cell.
+        """
+        if cell_id < 0 or cell_id >= self.GetNumberOfCells():
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+        
+        # Retrieve shared and boundary faces for the cell
+        shared_faces_info = self.sharedCells[cell_id]
+        face_ids = shared_faces_info['shared_faces'] + shared_faces_info['boundary_faces']
+        
+        volume = 0.0
+        for face_id in face_ids:
+            face_pts = self.faces[face_id]
+
+            # Calculate face area and normal using existing calculateArea method
+            vtk_points = vtk.vtkPoints()
+            for pt_id in face_pts:
+                vtk_points.InsertNextPoint(self.GetPoint(pt_id))
+            
+            area = self.calculateArea(vtk_points)
+            
+            volume += area
+        
+        volume /= len(face_ids)
+
+        return abs(volume)
