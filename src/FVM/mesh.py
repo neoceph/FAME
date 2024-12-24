@@ -275,3 +275,37 @@ class StructuredMesh(vtk.vtkStructuredGrid):
             return area, normal
         else:
             return area
+
+    def getCellVolume(self, cell_id):
+        """
+        Calculate the volume of a cell using the Gauss Divergence Theorem.
+
+        Args:
+            cell_id (int): ID of the cell.
+
+        Returns:
+            float: Volume of the cell.
+        """
+        if cell_id < 0 or cell_id >= self.GetNumberOfCells():
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+        
+        # Retrieve shared and boundary faces for the cell
+        shared_faces_info = self.sharedCells[cell_id]
+        face_ids = shared_faces_info['shared_faces'] + shared_faces_info['boundary_faces']
+        
+        volume = 0.0
+        for face_id in face_ids:
+            face_pts = self.faces[face_id]
+
+            # Calculate face area and normal using existing calculateArea method
+            vtk_points = vtk.vtkPoints()
+            for pt_id in face_pts:
+                vtk_points.InsertNextPoint(self.GetPoint(pt_id))
+            
+            area = self.calculateArea(vtk_points)
+            
+            volume += area
+        
+        volume /= len(face_ids)
+
+        return abs(volume)
