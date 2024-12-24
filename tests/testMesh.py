@@ -359,3 +359,30 @@ class TestStructuredMesh(unittest.TestCase):
             
             # Assert that the calculated volume matches the expected value
             self.assertAlmostEqual(volume, expected_volume, places=5, msg=f"Mismatch in volume for cell {cell_id}")
+
+    def testGetFacesByX(self):
+        
+        expectedCellFaces = self.divisions[1] * self.divisions[2]
+        result = self.mesh.getFacesByCoordinates(x=self.bounds[0][0], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)
+
+        result = self.mesh.getFacesByCoordinates(x=self.bounds[0][1], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)
+
+    def testGetFacesByY(self):
+        
+        expectedCellFaces = self.divisions[0] * self.divisions[2]
+        result = self.mesh.getFacesByCoordinates(y=self.bounds[1][0], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)
+
+        result = self.mesh.getFacesByCoordinates(y=self.bounds[1][1], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)
+
+    def testGetFacesByZ(self):
+        
+        expectedCellFaces = self.divisions[0] * self.divisions[1]
+        result = self.mesh.getFacesByCoordinates(z=self.bounds[2][0], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)
+
+        result = self.mesh.getFacesByCoordinates(z=self.bounds[2][1], tolerance=0.1)
+        self.assertEqual(len(result), expectedCellFaces)        
