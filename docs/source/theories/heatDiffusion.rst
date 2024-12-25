@@ -104,7 +104,7 @@ If a boundary surface is kept at :math:`T_\infty` with a convective coefficient 
 If a boundary is kept at a fixed temperature :math:`T_s` then :math:`T_b = T_b`, but if the surface is allowed to convect :math:`T_b=0`.
 
 Generalization
-------------
+---------------
 
 The following equations are the general form of heat diffusion equation. Notice :math:`q_i` as the source heat per unit volume and :math:`\delta V` as the volume of the cell.
 
