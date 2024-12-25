@@ -8,7 +8,16 @@ class MaterialProperty:
         :param propertyName: Name of the property (e.g., 'thermal_conductivity')
         :param baseValue: Value at reference temperature (referenceTemperature)
         :param referenceTemperature: Reference temperature (default is 298.15 K)
-        :param method: Method for temperature dependency ('constant', 'linear', 'polynomial', 'exponential')
+        :param method: Method for temperature dependency ('constant', 'linear', 'polynomial', 'exponential')  
+
+            i. Constant: :math:`material property = baseValue`
+            
+            ii. Linear: :math:`material property = baseValue \cdot (1+c_0 \cdot \Delta T)`
+            
+            iii. Polynomial: :math:`material property = baseValue \cdot (1+c_0 \cdot {(\Delta T})^n + c_1 \cdot {(\Delta T})^{n-1} + ... + c_n)`
+
+            iv. Exponential :math:`material property = a_{0} \cdot e^{\\beta\Delta T}`
+            
         :param coefficients: Coefficients for polynomial or exponential models
         """
         self.propertyName = propertyName
@@ -47,7 +56,7 @@ class MaterialProperty:
 
     def _exponentialModel(self, temperature):
         """
-        Exponential temperature dependence model in the form :math:`_{0} \cdot e^{\beta \delta T}`  
+        Exponential temperature dependence.
         """
         beta = self.coefficients[0] if self.coefficients else 0
         return self.baseValue * np.exp(beta * (temperature - self.referenceTemperature))
