@@ -12,11 +12,9 @@ class MaterialProperty:
 
             i. Constant: :math:`material property = baseValue`
             
-            ii. Linear: :math:`material property = baseValue \cdot (1+c_0 \cdot \Delta T)`
-            
-            iii. Polynomial: :math:`material property = baseValue \cdot (1+c_0 \cdot {(\Delta T})^n + c_1 \cdot {(\Delta T})^{n-1} + ... + c_n)`
+            ii. Polynomial: :math:`material property = baseValue \cdot (1+c_0 \cdot {(\Delta T})^n + c_1 \cdot {(\Delta T})^{n-1} + ... + c_n)`
 
-            iv. Exponential :math:`material property = a_{0} \cdot e^{\\beta\Delta T}`
+            iii. Exponential :math:`material property = a_{0} \cdot e^{\\beta\Delta T}`
             
         :param coefficients: Coefficients for polynomial or exponential models
         """
@@ -33,9 +31,7 @@ class MaterialProperty:
         :param temperature: Temperature at which to evaluate the property
         :return: Evaluated property value
         """
-        if self.method == 'linear':
-            return self._linearModel(temperature)
-        elif self.method == 'polynomial':
+        if self.method == 'polynomial':
             return self._polynomialModel(temperature)
         elif self.method == 'exponential':
             return self._exponentialModel(temperature)
@@ -43,11 +39,6 @@ class MaterialProperty:
             return self.baseValue
         else:
             raise ValueError("Unknown method: choose 'linear', 'polynomial', 'exponential', or 'constant'")
-
-    def _linearModel(self, temperature):
-        """Linear temperature dependence model."""
-        alpha = self.coefficients[0] if self.coefficients else 0
-        return self.baseValue * (1 + alpha * (temperature - self.referenceTemperature))
 
     def _polynomialModel(self, temperature):
         """Polynomial temperature dependence model."""

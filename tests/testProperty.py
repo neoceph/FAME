@@ -8,8 +8,8 @@ class TestMaterialProperty(unittest.TestCase):
         prop = MaterialProperty('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='constant')
         self.assertEqual(prop.evaluate(400), 200)
     
-    def test_linear_model(self):
-        thermalConductivity = MaterialProperty('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='linear', coefficients=[1e-3])
+    def test_linear_with_polynomial_model(self):
+        thermalConductivity = MaterialProperty('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='polynomial', coefficients=[1e-3, 1])
         self.assertAlmostEqual(thermalConductivity.evaluate(350), 210.37, places=1)
 
     def test_polynomial_model(self):
