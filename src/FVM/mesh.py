@@ -170,55 +170,27 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         """
         return self.faces.get(face_id, None)
 
-    def getFaceByCenter(self, center, tolerance=None):
+    def getFaceByCenter(self, center, tolerance=1e-6):
         """
-        Retrieve face ID by proximity to a center point, optionally within a tolerance.
-        
-        Args:
-            center (tuple): Target center point.
-            tolerance (float, optional): Distance tolerance. If provided, returns all faces within the tolerance.
-        
-        Returns:
-            int or list: Closest face ID or list of face IDs within the tolerance.
-        """
-        center = np.array(center)
-        distances = {fid: np.linalg.norm(np.array(self.faceCenters[fid]) - center) for fid in self.faceCenters}
-        
-        if tolerance is not None:
-            return [fid for fid, dist in distances.items() if dist <= tolerance]
-        
-        return min(distances, key=distances.get)
-    
-    def getFaceByCenter(self, x=None, y=None, z=None, tolerance=None):
-        """
-        Retrieve face ID by proximity to a point defined by x, y, z, optionally within a tolerance.
+        Retrieve all face IDs sorted by proximity to a center point, optionally filtered by a tolerance.
 
         Args:
-            x (float, optional): x-coordinate of the point.
-            y (float, optional): y-coordinate of the point.
-            z (float, optional): z-coordinate of the point.
-            tolerance (float, optional): Distance tolerance. If provided, returns all faces within the tolerance.
+            center (tuple or list): Target center point (x, y, z).
+            tolerance (float, optional): Distance tolerance. Defaults to 1e-9.
 
         Returns:
-            int or list: Closest face ID or list of face IDs within the tolerance.
-
-        Raises:
-            ValueError: If none of x, y, z are provided.
+            list: List of face IDs sorted by proximity to the center point.
         """
-        if x is None and y is None and z is None:
-            raise ValueError("At least one of x, y, or z must be provided.")
+        if not isinstance(center, (tuple, list)) or len(center) != 3:
+            raise ValueError("Center must be a tuple or list of length 3.")
+        
+        target = np.array(center)
 
-        center = np.array([x if x is not None else 0,
-                        y if y is not None else 0,
-                        z if z is not None else 0])
-
-        distances = {fid: np.linalg.norm(np.array(self.faceCenters[fid]) - center)
+        distances = {fid: np.linalg.norm(np.array(self.faceCenters[fid]) - target)
                     for fid in self.faceCenters}
 
-        if tolerance is not None:
-            return [fid for fid, dist in distances.items() if dist <= tolerance]
+        return sorted([fid for fid, dist in distances.items() if dist <= tolerance], key=lambda fid: distances[fid])
 
-        return min(distances, key=distances.get)
 
     def getFacesByCoordinates(self, x=None, y=None, z=None, tolerance=None):
         """

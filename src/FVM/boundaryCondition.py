@@ -2,96 +2,87 @@ import numpy as np
 from scipy.sparse import lil_matrix
 
 class BoundaryCondition:
-    def __init__(self, mesh):
+    def __init__(self, mesh, valueType='scalar'):
         """
-        Initializes the BoundaryCondition class.
-
+        Initializes the BoundaryCondition object.
+        
         Args:
-            mesh: The StructuredMesh object containing the cells and boundary information.
+            mesh (StructuredMesh): The mesh object.
+            valueType (str): 'scalar', 'vector', or 'tensor'.
         """
         self.mesh = mesh
+        self.valueType = valueType
+        self.dof = 1 if valueType == 'scalar' else 3 if valueType == 'vector' else 9
+        # Initialize bcValues based on number of face centers
+        num_faces = len(mesh.faceCenters)
+        self.bcValues = lil_matrix((num_faces, self.dof))
 
-    def apply_dirichlet(self, A, b, coordinates, value):
+    def applyBoundaryCondition(self, faceCenter, value=0.0, tolerance=1e-6):
         """
-        Apply Dirichlet boundary conditions to the system.
+        Apply boundary condition to a face based on face center.
 
         Args:
-            A: Sparse matrix (lil_matrix format).
-            b: RHS vector.
-            coordinates: Dictionary specifying the boundary coordinates (e.g., {"x": 0, "y": None, "z": None}).
-            value: The Dirichlet value to apply.
-        """
-        boundary_faces = self._select_boundary_faces(coordinates)
-
-        for face_id in boundary_faces:
-            cell_ids = self._get_cells_from_face(face_id)
-
-            for cell_id in cell_ids:
-                A[cell_id, :] = 0  # Zero out the row
-                A[cell_id, cell_id] = 1  # Set diagonal to 1
-                b[cell_id] = value  # Set the value in b
-
-    def apply_neumann(self, b, coordinates, flux):
-        """
-        Apply Neumann boundary conditions to the system.
-
-        Args:
-            b: RHS vector.
-            coordinates: Dictionary specifying the boundary coordinates (e.g., {"x": 1, "y": None, "z": None}).
-            flux: The flux value to apply.
-        """
-        boundary_faces = self._select_boundary_faces(coordinates)
-
-        for face_id in boundary_faces:
-            cell_ids = self._get_cells_from_face(face_id)
-            face_area = self._get_face_area(face_id)
-
-            for cell_id in cell_ids:
-                b[cell_id] += flux * face_area
-
-    def _select_boundary_faces(self, coordinates):
-        """
-        Select boundary faces based on the specified coordinates.
-
-        Args:
-            coordinates: Dictionary specifying the boundary coordinates (e.g., {"x": 0, "y": None, "z": None}).
-
+            faceCenter (tuple): Coordinates of the target face center (x, y, z).
+            value (float or np.array): Boundary condition value (scalar, vector, or tensor).
+            tolerance (float): Tolerance to identify nearby faces.
+        
         Returns:
-            List of face IDs that match the specified coordinates.
+            list: Faces to which the boundary condition was applied.
         """
-        boundary_faces = []
-        for face_id in range(self.mesh.GetNumberOfFaces()):
-            face_center = self.mesh.get_face_center(face_id)
-            match = all(
-                coord is None or np.isclose(face_center[dim], coord)
-                for dim, coord in zip(["x", "y", "z"], [coordinates.get("x"), coordinates.get("y"), coordinates.get("z")])
-            )
-            if match:
-                boundary_faces.append(face_id)
-        return boundary_faces
+        faceIds = self.mesh.getFacesByCoordinates(*faceCenter, tolerance=tolerance)
 
-    def _get_cells_from_face(self, face_id):
+        if not faceIds:
+            raise ValueError("No matching face found within the specified tolerance.")
+
+        # Determine value type based on input shape
+        value = np.atleast_1d(value)
+        
+        for faceId in faceIds:
+            if value.size == 1:  # Scalar
+                self.bcValues[faceId, 0] = value[0]
+            elif value.size == 3:  # Vector
+                self.bcValues[faceId, :3] = value
+            elif value.size == 9:  # Tensor
+                self.bcValues[faceId, :9] = value.flatten()
+            else:
+                raise ValueError("Value size does not match scalar (1), vector (3), or tensor (9) dimensions.")
+        
+        return faceIds
+
+    def applyBoundaryCondition(self, x=None, y=None, z=None, value=0.0, tolerance=1e-6):
         """
-        Retrieve the cell IDs associated with a specific boundary face.
+        Apply boundary condition to a face based on x, y, z coordinates.
 
         Args:
-            face_id: The face ID.
-
+            x, y, z (float, optional): Coordinates of the target face.
+            value (float or np.array): Boundary condition value (scalar, vector, or tensor).
+            tolerance (float): Tolerance to identify nearby faces.
+        
         Returns:
-            List of cell IDs associated with the boundary face.
+            Faces to which the boundary condition was applied.
         """
-        # Placeholder implementation: Replace with actual logic based on your mesh structure
-        return self.mesh.get_cells_connected_to_face(face_id)
+        faceIds = self.mesh.getFacesByCoordinates(x=x, y=y, z=z, tolerance=tolerance)
 
-    def _get_face_area(self, face_id):
+        if not faceIds:
+            raise ValueError("No matching face found within the specified tolerance.")
+
+        # Determine value type based on input shape
+        value = np.atleast_1d(value)
+        
+        for faceId in faceIds:
+            if value.size == 1:  # Scalar
+                self.bcValues[faceId, 0] = value[0]
+            elif value.size == 3:  # Vector
+                self.bcValues[faceId, :3] = value
+            elif value.size == 9:  # Tensor
+                self.bcValues[faceId, :9] = value.flatten()
+            else:
+                raise ValueError("Value size does not match scalar (1), vector (3), or tensor (9) dimensions.")
+        
+        return faceIds
+
+    def getBoundaryMatrix(self):
         """
-        Calculate the area of a specific boundary face.
-
-        Args:
-            face_id: The face ID.
-
-        Returns:
-            Area of the face.
+        Return the sparse boundary matrix.
         """
-        # Placeholder implementation: Replace with actual logic based on your mesh structure
-        return self.mesh.get_face_area(face_id)
+        return self.bcValues

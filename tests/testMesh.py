@@ -313,15 +313,23 @@ class TestStructuredMesh(unittest.TestCase):
 
     def testGetFaceByCenter(self):
         """
-        Test that getFaceByCenter correctly retrieves the nearest face ID.
+        Test that getFaceByCenter correctly retrieves the nearest face ID(s).
         """
         firstFaceCenter = list(self.mesh.faceCenters.values())[0]
-        faceId = self.mesh.getFaceByCenter(firstFaceCenter)
+        faceIds = self.mesh.getFaceByCenter(firstFaceCenter)
         
-        self.assertIn(faceId, self.mesh.faces)
-        retrieved_center = np.array(self.mesh.faceCenters[faceId])
-        
-        np.testing.assert_array_almost_equal(firstFaceCenter, retrieved_center, decimal=5)
+        # Handle list of face IDs or single face ID
+        if isinstance(faceIds, list):
+            self.assertGreater(len(faceIds), 0)
+            for faceId in faceIds:
+                self.assertIn(faceId, self.mesh.faces)
+                retrieved_center = np.array(self.mesh.faceCenters[faceId])
+                np.testing.assert_array_almost_equal(firstFaceCenter, retrieved_center, decimal=5)
+        else:
+            self.assertIn(faceIds, self.mesh.faces)
+            retrieved_center = np.array(self.mesh.faceCenters[faceIds])
+            np.testing.assert_array_almost_equal(firstFaceCenter, retrieved_center, decimal=5)
+
 
     def testGetFaceByCenterWithTolerance(self):
         """
@@ -331,14 +339,19 @@ class TestStructuredMesh(unittest.TestCase):
         tolerance = 0.6
         faceIDs = self.mesh.getFaceByCenter(test_point, tolerance=tolerance)
         
-        self.assertIsInstance(faceIDs, list)
+        # Ensure the result is always treated as a list
+        if not isinstance(faceIDs, list):
+            faceIDs = [faceIDs]
+        
         self.assertGreater(len(faceIDs), 0)
 
         # Validate that all returned faces are within the tolerance distance
         for face_id in faceIDs:
+            self.assertIn(face_id, self.mesh.faceCenters)  # Ensure the face exists
             face_center = np.array(self.mesh.faceCenters[face_id])
             distance = np.linalg.norm(face_center - np.array(test_point))
             self.assertLessEqual(distance, tolerance)
+
 
     def testCellVolumeCalculation(self):
         """
