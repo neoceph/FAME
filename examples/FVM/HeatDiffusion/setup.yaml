@@ -1,0 +1,52 @@
+simulation:
+  domain:
+    size: 
+      x: [0, 1]     # Domain length in x-direction (meters)
+      y: [0, 1]]     # Domain length in y-direction (meters)
+      z: [0, 1]]    # Domain length in z-direction (meters)
+    divisions:
+      x: 50     # Number of divisions in x-direction
+      y: 50     # Number of divisions in y-direction
+      z: 50      # Number of divisions in z-direction
+
+  material:
+    name: "Aluminum"
+    density: 2700         # kg/m^3
+    specific_heat: 900    # J/kgK
+    thermal_conductivity: 237  # W/mK
+
+  boundary_conditions:
+    x:
+      0:  # At x = 0
+        type: "temperature"
+        value: 300  # K
+      1:  # At x = 1
+        type: "temperature"
+        value: 300 # K
+    y:
+      0:  # At x = 0
+        type: "temperature"
+        value: 300  # K
+      1:  # At x = 1
+        type: "temperature"
+        value: 300 # K
+    z:
+      0:  # At x = 0
+        type: "temperature"
+        value: 300  # K
+      1:  # At x = 1
+        type: "temperature"
+        value: 300 # K
+
+  solver:
+    algorithm: "SIMPLE"
+    relaxation_factors:
+      pressure: 0.7
+      velocity: 0.3
+      temperature: 0.9
+    convergence_criteria: 1e-6
+    max_iterations: 5000
+
+  time_control:
+    time_step: 0.001   # seconds
+    total_time: 0.5    # seconds

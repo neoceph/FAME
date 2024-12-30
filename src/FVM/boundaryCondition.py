@@ -17,38 +17,6 @@ class BoundaryCondition:
         num_faces = len(mesh.faceCenters)
         self.bcValues = lil_matrix((num_faces, self.dof))
 
-    def applyBoundaryCondition(self, faceCenter, value=0.0, tolerance=1e-6):
-        """
-        Apply boundary condition to a face based on face center.
-
-        Args:
-            faceCenter (tuple): Coordinates of the target face center (x, y, z).
-            value (float or np.array): Boundary condition value (scalar, vector, or tensor).
-            tolerance (float): Tolerance to identify nearby faces.
-        
-        Returns:
-            list: Faces to which the boundary condition was applied.
-        """
-        faceIds = self.mesh.getFacesByCoordinates(*faceCenter, tolerance=tolerance)
-
-        if not faceIds:
-            raise ValueError("No matching face found within the specified tolerance.")
-
-        # Determine value type based on input shape
-        value = np.atleast_1d(value)
-        
-        for faceId in faceIds:
-            if value.size == 1:  # Scalar
-                self.bcValues[faceId, 0] = value[0]
-            elif value.size == 3:  # Vector
-                self.bcValues[faceId, :3] = value
-            elif value.size == 9:  # Tensor
-                self.bcValues[faceId, :9] = value.flatten()
-            else:
-                raise ValueError("Value size does not match scalar (1), vector (3), or tensor (9) dimensions.")
-        
-        return faceIds
-
     def applyBoundaryCondition(self, x=None, y=None, z=None, value=0.0, tolerance=1e-6):
         """
         Apply boundary condition to a face based on x, y, z coordinates.
