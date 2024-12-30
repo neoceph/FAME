@@ -1,9 +1,12 @@
 import numpy as np
 import scipy.sparse as sp
 import vtk
+import mesh
+import solver
+import property
 
 class Discretization:
-    def __init__(self, mesh):
+    def __init__(self, mesh, solver, property):
         """
         Initializes the Discretization class.
 
@@ -11,8 +14,8 @@ class Discretization:
             mesh (StructuredMesh): The mesh object containing cells and shared face information.
         """
         self.mesh = mesh
-        self.A = None  # Sparse matrix A
-        self.b = None  # Vector b
+        self.solver = solver
+        self.property = property
 
     def discretize_heat_equation(self, thermal_conductivity):
         """

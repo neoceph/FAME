@@ -90,6 +90,7 @@ For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :
         b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
     \end{aligned}
 
+
 2. Neumann Boundary Condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If a boundary surface is kept at :math:`T_\infty` with a convective coefficient :math:`h`, the equation becomes:
@@ -116,6 +117,18 @@ The following equations are the general form of heat diffusion equation. Notice 
     \end{aligned}
 
 These equation covers all the cases and reduces to desired formulation
+
+Here: 
+
+- :math:`a_{ij}` is element of A matrix at row i and column j.
+- :math:`k_{i \leftrightarrow j}` is the thermal conductivity.
+- :math:`||x_{i} - x_{j}||^2` is the Euclidean distance between points :math:`i` and :math:`j`.
+- :math:`h` is the convective heat transfer coefficient.
+- :math:`S_i` is the temperature dependent heat source.
+- :math:`[S_u]_{i}` is the independent heat source.
+- :math:`q_{i}` is the heat source per unit volume.
+- :math:`T_b` is the temperature at the boundary surface.
+- :math:`T_{\infty}` is the ambient temperature.
 
 1. If :math:`h=0`, equation takes the Dirichlet BC form.
 
