@@ -63,7 +63,7 @@ class TestStructuredMesh(unittest.TestCase):
         """
         Test that cell centers are computed correctly.
         """
-        self.assertEqual(len(self.mesh.cell_centers), self.mesh.GetNumberOfCells())
+        self.assertEqual(len(self.mesh.cellCenters), self.mesh.GetNumberOfCells())
 
         # Check the center of the first cell
         first_cell_center = self.mesh.getCellCenter(0)
@@ -95,6 +95,41 @@ class TestStructuredMesh(unittest.TestCase):
         # Verify that shared cells and vertices can be iterated
         for shared_cell in shared_cells:
             self.assertIsInstance(shared_cell, int)
+
+    def test_shared_cells(self):
+        """
+        Test if sharedCells are correctly computed and populated.
+        """
+        # Ensure sharedCells list is not empty
+        self.assertGreater(len(self.mesh.sharedCells), 0, "sharedCells should not be empty.")
+
+        # Iterate through each cell and verify structure
+        for cell_info in self.mesh.sharedCells:
+            # Check required keys exist
+            self.assertIn('cell_id', cell_info)
+            self.assertIn('shared_cells', cell_info)
+            self.assertIn('shared_faces', cell_info)
+            self.assertIn('boundary_faces', cell_info)
+
+            # Validate types of each key
+            self.assertIsInstance(cell_info['cell_id'], int)
+            self.assertIsInstance(cell_info['shared_cells'], list)
+            self.assertIsInstance(cell_info['shared_faces'], list)
+            self.assertIsInstance(cell_info['boundary_faces'], list)
+
+            # Ensure the cell_id is within expected bounds
+            self.assertGreaterEqual(cell_info['cell_id'], 0)
+            self.assertLess(cell_info['cell_id'], self.mesh.GetNumberOfCells())
+
+            # Check that shared cells and faces are integers
+            for shared_cell in cell_info['shared_cells']:
+                self.assertIsInstance(shared_cell, int)
+
+            for face in cell_info['shared_faces']:
+                self.assertIsInstance(face, int)
+
+            for boundary_face in cell_info['boundary_faces']:
+                self.assertIsInstance(boundary_face, int)            
 
     def testTriangleArea(self):
         """

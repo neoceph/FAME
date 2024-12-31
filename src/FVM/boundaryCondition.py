@@ -1,8 +1,8 @@
 import numpy as np
-from scipy.sparse import lil_matrix
+from scipy.sparse import sp
 
 class BoundaryCondition:
-    def __init__(self, mesh, valueType='scalar'):
+    def __init__(self, mesh, valueType='scalar', convectionCoefficient=0, emmissivity=0, dependentSource=0, independentSource=0, volumetricSource=0, ambientTemperature=0):
         """
         Initializes the BoundaryCondition object.
         
@@ -15,7 +15,21 @@ class BoundaryCondition:
         self.dof = 1 if valueType == 'scalar' else 3 if valueType == 'vector' else 9
         # Initialize bcValues based on number of face centers
         num_faces = len(mesh.faceCenters)
-        self.bcValues = lil_matrix((num_faces, self.dof))
+        vectorLength = len(mesh.div_x * mesh.div_y * mesh.div_z)
+        self.bcValues = sp.lil_matrix((num_faces, self.dof))
+
+        self.convectionCoefficient = convectionCoefficient
+        self.emissivity = emmissivity
+        self.ambientTemperature = ambientTemperature
+        
+        self.dependentSource = sp.lil_matrix(vectorLength, 1)
+        self.independentSource = sp.lil_matrix(vectorLength, 1)
+        self.volumetricSource = sp.lil_matrix(vectorLength, 1)
+        
+        for i in range(vectorLength):
+            self.dependentSource[i, 0] = dependentSource
+            self.independentSource[i, 0] = independentSource
+            self.volumetricSource[i, 0] = volumetricSource
 
     def applyBoundaryCondition(self, x=None, y=None, z=None, value=0.0, tolerance=1e-6):
         """

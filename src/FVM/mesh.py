@@ -66,7 +66,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         cell_centers_filter.Update()
 
         cell_centers_output = cell_centers_filter.GetOutput()
-        self.cell_centers = [
+        self.cellCenters = [
             cell_centers_output.GetPoint(i)
             for i in range(cell_centers_output.GetNumberOfPoints())
         ]
@@ -144,8 +144,8 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         Returns:
             tuple: Center of the cell (x, y, z).
         """
-        if 0 <= cell_id < len(self.cell_centers):
-            return self.cell_centers[cell_id]
+        if 0 <= cell_id < len(self.cellCenters):
+            return self.cellCenters[cell_id]
         else:
             raise ValueError(f"Cell ID {cell_id} is out of range.")
 
@@ -230,6 +230,26 @@ class StructuredMesh(vtk.vtkStructuredGrid):
                 matching_faces.append(fid)
         
         return matching_faces
+
+    def getCellIdByFaceId(self, face_id):
+        """
+        Retrieve the cell ID that owns a specific face ID.
+
+        Args:
+            face_id (int): ID of the face to search for.
+
+        Returns:
+            int: The cell ID that owns the specified face.
+        
+        Raises:
+            ValueError: If the face ID does not belong to any cell.
+        """
+        for cell in self.sharedCells:
+            if face_id in cell['shared_faces'] or face_id in cell['boundary_faces']:
+                return cell['cell_id']
+        
+        raise ValueError(f"Face ID {face_id} does not belong to any cell.")
+
 
     def listFacesByPoint(self, point_id):
         """
