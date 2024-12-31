@@ -15,11 +15,13 @@ class StructuredMesh(vtk.vtkStructuredGrid):
             divisions (tuple): Number of divisions along x, y, z as (div_x, div_y, div_z).
         """
         super().__init__()
+        
         self.sharedCells = []
         self.cellCenters = []
         self.faces = {}
         self.faceCenters = {}
     
+        self.divisions = divisions
 
         # Generate grid points
         self._generateGrid(bounds, divisions)

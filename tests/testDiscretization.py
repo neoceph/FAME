@@ -1,11 +1,14 @@
 import unittest
 import scipy.sparse as sp
 import numpy as np
+import os
+import shutil
 
 from src.FVM.mesh import StructuredMesh
 from src.FVM.property import MaterialProperty
 from src.FVM.solver import Solver
 from src.FVM.discretization import Discretization
+from src.FVM.boundaryCondition import BoundaryCondition
 
 
 class TestDiscretization(unittest.TestCase):
@@ -14,6 +17,9 @@ class TestDiscretization(unittest.TestCase):
         """
         Set up StructuredMesh, MaterialProperty, and Solver objects for each test case.
         """
+        
+        self.outputDir = "testOutput"
+        
         # Initialize mesh with bounds and divisions
         self.mesh = StructuredMesh(((0, 10), (0, 5), (0, 3)), (10, 5, 3))
         
@@ -26,9 +32,21 @@ class TestDiscretization(unittest.TestCase):
         b = np.zeros(numCells)  # Zero vector
         
         self.solver = Solver(A, b)
+
+        # Initialize boundary condition
+        self.bc = BoundaryCondition(self.mesh)
         
         # Initialize Discretization object
-        self.discretization = Discretization(self.mesh, self.solver, self.prop)
+        self.discretization = Discretization(self.mesh, self.solver, self.prop, self.bc)
+        os.makedirs(self.outputDir, exist_ok=True)
+
+    def tearDown(self):
+        """
+        Clean up after each test by removing the output directory.
+        """
+        if os.path.exists(self.outputDir):
+            shutil.rmtree(self.outputDir)  # Recursively remove the directory
+            print(f"Removed directory: {self.outputDir}")
 
     def testInitialization(self):
         """
@@ -58,10 +76,11 @@ class TestDiscretization(unittest.TestCase):
         self.assertGreater(non_zero_elements, 0, "Matrix A should have non-zero elements after discretization.")
 
         # Test if the diagonal has non-zero values
-        # for i in range(num_cells):
-        #     self.assertNotEqual(self.solver.A[i, i], 0, f"Diagonal element A[{i},{i}] should not be zero.")
+        for i in range(num_cells):
+            self.assertNotEqual(self.solver.A[i, i], 0, f"Diagonal element A[{i},{i}] should not be zero.")
 
         # Plot the sparse matrix after discretization
-        self.solver.plotSparseMatrix(self.solver.A, filename="test_matrix_plot.jpeg")
+        outputFilename = os.path.join(self.outputDir, "test_matrix_plot.jpeg")
+        self.solver.plotSparseMatrix(self.solver.A, filename=outputFilename)
 
         print("Sparse matrix visualization saved as 'test_matrix_plot.jpeg'.")
