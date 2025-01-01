@@ -1,52 +1,53 @@
 simulation:
   domain:
     size: 
-      x: [0, 1]     # Domain length in x-direction (meters)
-      y: [0, 1]]     # Domain length in y-direction (meters)
-      z: [0, 1]]    # Domain length in z-direction (meters)
+      x: [0, 10]
+      y: [0, 5]
+      z: [0, 3]
     divisions:
-      x: 50     # Number of divisions in x-direction
-      y: 50     # Number of divisions in y-direction
-      z: 50      # Number of divisions in z-direction
+      x: 10
+      y: 5
+      z: 3
 
   material:
     name: "Aluminum"
-    density: 2700         # kg/m^3
-    specific_heat: 900    # J/kgK
-    thermal_conductivity: 237  # W/mK
+    density: 2700
+    specificHeat: 900
+    thermalConductivity: 237
 
-  boundary_conditions:
+  boundaryConditions:
+    parameters:
+      temperature:
+        variableType: "scalar"
+        convectionCoefficient: 15
+        emmissivity: 0.85
+        ambientTemperature: 298
     x:
-      0:  # At x = 0
-        type: "temperature"
-        value: 300  # K
-      1:  # At x = 1
-        type: "temperature"
-        value: 300 # K
+      0:  
+        - type: "temperature"
+          value: 300
+      1:
+        - type: "temperature"
+          value: 350
     y:
-      0:  # At x = 0
-        type: "temperature"
-        value: 300  # K
-      1:  # At x = 1
-        type: "temperature"
-        value: 300 # K
+      0:  
+        - type: "temperature"
+          value: 300
+      1:
+        - type: "temperature"
+          value: 320
     z:
-      0:  # At x = 0
-        type: "temperature"
-        value: 300  # K
-      1:  # At x = 1
-        type: "temperature"
-        value: 300 # K
+      0:  
+        - type: "temperature"
+          value: 300
+      1:
+        - type: "temperature"
+          value: 330
 
   solver:
-    algorithm: "SIMPLE"
-    relaxation_factors:
-      pressure: 0.7
-      velocity: 0.3
-      temperature: 0.9
-    convergence_criteria: 1e-6
-    max_iterations: 5000
+    type: "GaussSeidel"
+    tolerance: 1e-8
+    maxIterations: 1000
 
-  time_control:
-    time_step: 0.001   # seconds
-    total_time: 0.5    # seconds
+  timeControl:
+    steadyState: true  # Indicates that this is a steady-state problem

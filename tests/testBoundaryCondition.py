@@ -15,7 +15,7 @@ class TestBoundaryCondition(unittest.TestCase):
         self.mesh = StructuredMesh(self.bounds, self.divisions)
 
     def test_apply_scalar_boundary_conditions(self):
-        bc = BoundaryCondition(self.mesh, valueType='scalar')
+        bc = BoundaryCondition(self.mesh, variableType='scalar')
         
         # Apply scalar value to faces at x=0 and x=10
         faceIds_x = bc.applyBoundaryCondition(x=0, value=100)
@@ -38,7 +38,7 @@ class TestBoundaryCondition(unittest.TestCase):
             self.assertEqual(bc.bcValues[faceId, 0], 100)
 
     def test_apply_vector_boundary_conditions(self):
-        bc = BoundaryCondition(self.mesh, valueType='vector')
+        bc = BoundaryCondition(self.mesh, variableType='vector')
         vector_value = np.array([100, 50, 25])
         
         # Apply vector to faces at x=0 and x=10
@@ -61,7 +61,7 @@ class TestBoundaryCondition(unittest.TestCase):
             np.testing.assert_array_equal(bc.bcValues[faceId, :3].toarray().flatten(), vector_value)
 
     def test_apply_tensor_boundary_conditions(self):
-        bc = BoundaryCondition(self.mesh, valueType='tensor')
+        bc = BoundaryCondition(self.mesh, variableType='tensor')
         tensor_value = np.eye(3).flatten() * 100
         
         # Apply tensor to faces at x=0 and x=10

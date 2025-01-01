@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 
 class BoundaryCondition:
-    def __init__(self, mesh, valueType='scalar', convectionCoefficient=0, emmissivity=0, dependentSource=0, independentSource=0, volumetricSource=0, ambientTemperature=0):
+    def __init__(self, mesh, variableType='scalar', convectionCoefficient=0, emmissivity=0, dependentSource=0, independentSource=0, volumetricSource=0, ambientTemperature=0):
         """
         Initializes the BoundaryCondition object.
         
@@ -11,8 +11,8 @@ class BoundaryCondition:
             valueType (str): 'scalar', 'vector', or 'tensor'.
         """
         self.mesh = mesh
-        self.valueType = valueType
-        self.dof = 1 if valueType == 'scalar' else 3 if valueType == 'vector' else 9
+        self.valueType = variableType
+        self.dof = 1 if variableType == 'scalar' else 3 if variableType == 'vector' else 9
         # Initialize bcValues based on number of face centers
         num_faces = len(self.mesh.faceCenters)
         vectorLength = self.mesh.divisions[0] * self.mesh.divisions[1] * self.mesh.divisions[2]
