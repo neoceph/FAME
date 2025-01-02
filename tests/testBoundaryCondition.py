@@ -34,7 +34,6 @@ class TestBoundaryCondition(unittest.TestCase):
         
         # Validate boundary matrix by iterating over faceIds
         for faceId in faceIds_x + faceIds_y + faceIds_z:
-            print(faceId)
             self.assertEqual(bc.bcValues[faceId, 0], 100)
 
     def test_apply_vector_boundary_conditions(self):
