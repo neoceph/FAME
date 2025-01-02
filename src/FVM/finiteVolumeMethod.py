@@ -70,11 +70,17 @@ class FVM:
         material_config = self.config.get('simulation', {}).get('material', {})
         self.material_properties = {}
 
+        material_name = material_config.get('name', 'Unknown Material')
+
         for property_name, base_value in material_config.items():
             if property_name != 'name':
-                material_property = prop.MaterialProperty(propertyName=property_name, baseValue=base_value)
+                material_property = prop(
+                    materialName=material_name,
+                    propertyName=property_name,
+                    baseValue=base_value
+                )
                 self.material_properties[property_name] = material_property
-                print(f"Loaded {property_name} with value: {base_value}")
+                print(f"Loaded {property_name} for {material_name} with value: {base_value}")
 
         print("Material properties successfully initialized.")
 
