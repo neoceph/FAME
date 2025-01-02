@@ -72,15 +72,36 @@ class FVM:
 
         material_name = material_config.get('name', 'Unknown Material')
 
-        for property_name, base_value in material_config.items():
+        # Initialize MaterialProperty instance for the material
+        material_property = prop(material_name)
+
+        # Add each property to the material
+        for property_name, property_details in material_config.items():
             if property_name != 'name':
-                material_property = prop(
-                    materialName=material_name,
+                # Handle scalar values by converting to dictionary
+                if isinstance(property_details, (int, float)):
+                    property_details = {
+                        'baseValue': property_details,
+                        'method': 'constant',
+                        'referenceTemperature': 298.15  # Default reference temperature
+                    }
+
+                base_value = property_details.get('baseValue', 0)
+                method = property_details.get('method', 'constant')
+                reference_temperature = property_details.get('referenceTemperature', 298.15)
+                coefficients = property_details.get('coefficients', [])
+
+                material_property.add_property(
                     propertyName=property_name,
-                    baseValue=base_value
+                    baseValue=base_value,
+                    referenceTemperature=reference_temperature,
+                    method=method,
+                    coefficients=coefficients
                 )
-                self.material_properties[property_name] = material_property
-                print(f"Loaded {property_name} for {material_name} with value: {base_value}")
+                print(f"Loaded {property_name} for {material_name} with base value: {base_value}, method: {method}, reference temperature: {reference_temperature}")
+
+        # Store the material property
+        self.material_properties[material_name] = material_property
 
         print("Material properties successfully initialized.")
 

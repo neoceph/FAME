@@ -24,9 +24,19 @@ class TestFVM(unittest.TestCase):
 
     def test_materialProperties(self):
         self.fvm.loadMaterialProperty()
-        self.assertIn('thermalConductivity', self.fvm.material_properties)
-        self.assertEqual(self.fvm.material_properties['thermalConductivity'].baseValue, 237)
-        print("Material properties test passed.")
+        
+        # Check if Aluminum is loaded as the material
+        self.assertIn('Aluminum', self.fvm.material_properties)
+
+        # Access the Aluminum material and its properties
+        aluminum = self.fvm.material_properties['Aluminum']
+        self.assertIn('thermalConductivity', aluminum.properties)
+        
+        # Verify the base value, method, and reference temperature of thermal conductivity
+        thermal_conductivity = aluminum.properties['thermalConductivity']
+        self.assertEqual(thermal_conductivity['baseValue'], 237)
+        self.assertEqual(thermal_conductivity['referenceTemperature'], 298.15)
+        self.assertEqual(thermal_conductivity['method'], 'polynomial')
 
     def test_solver(self):
         self.fvm.solveEquations()

@@ -23,8 +23,9 @@ class TestDiscretization(unittest.TestCase):
         # Initialize mesh with bounds and divisions
         self.mesh = StructuredMesh(((0, 10), (0, 5), (0, 3)), (10, 5, 3))
         
-        # Initialize MaterialProperty for thermal conductivity
-        self.prop = MaterialProperty('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='constant')
+        # Initialize MaterialProperty for Aluminum and add thermal conductivity
+        self.prop = MaterialProperty('Aluminum')
+        self.prop.add_property('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='constant')
         
         # Initialize solver with default empty matrix and vector
         numCells = self.mesh.GetNumberOfCells()
@@ -35,10 +36,12 @@ class TestDiscretization(unittest.TestCase):
 
         # Initialize boundary condition
         self.bc = BoundaryCondition(self.mesh)
-        
-        # Initialize Discretization object
+               
+        # Initialize Discretization object with evaluated property
         self.discretization = Discretization(self.mesh, self.solver, self.prop, self.bc)
+        
         os.makedirs(self.outputDir, exist_ok=True)
+
 
     def tearDown(self):
         """
@@ -52,18 +55,24 @@ class TestDiscretization(unittest.TestCase):
         """
         Test if Discretization object initializes correctly with given material property.
         """
-        self.assertEqual(self.discretization.property, 200, "Thermal conductivity should be set to 200.")
+        # Evaluate the thermal conductivity using the property object
+        thermal_conductivity = self.prop.evaluate('thermal_conductivity', 298.15)
+        self.assertEqual(thermal_conductivity, 200, "Thermal conductivity should be set to 200.")
         
         # Test other property fallback
-        invalid_prop = MaterialProperty('density', baseValue=100, referenceTemperature=300, method='variable')
-        disc_invalid = Discretization(self.mesh, self.solver, invalid_prop)
-        self.assertEqual(disc_invalid.property, 0, "Non-thermal conductivity property should default to 0.")
+        invalid_prop = MaterialProperty('Steel')
+        invalid_prop.add_property('density', baseValue=100, referenceTemperature=300, method='variable')
+        
+        disc_invalid = Discretization(self.mesh, self.solver, invalid_prop, self.bc)
+        with self.assertRaises(ValueError):
+            disc_invalid.discretizeHeatDiffusion()
 
     def testDiscretizeHeatDiffusion(self):
         """
         Test if heat diffusion discretization correctly populates matrix A and vector b.
         """
-        self.discretization.discretizeHeatDiffusion(self.prop.baseValue)
+        # Access the property directly from the MaterialProperty object
+        self.discretization.discretizeHeatDiffusion()
 
         num_cells = self.mesh.GetNumberOfCells()
 
