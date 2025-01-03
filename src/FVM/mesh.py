@@ -1,5 +1,6 @@
 import vtk
 import numpy as np
+import scipy.sparse as sp
 
 from scipy.spatial import ConvexHull
 from tqdm import tqdm
@@ -30,6 +31,10 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         self._computeCellFaces()
         self._computeCellCenter()
         self._computeNeighbors()
+
+        self.numCells = self.GetNumberOfCells()
+        self.A = sp.lil_matrix((self.numCells, self.numCells))  # Use LIL format for construction
+        self.b = np.zeros(self.numCells)
 
     def _generateGrid(self, bounds, divisions):
         """

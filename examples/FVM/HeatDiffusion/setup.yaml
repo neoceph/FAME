@@ -11,19 +11,20 @@ simulation:
 
   material:
     name: "Aluminum"
-    density:
-      baseValue: 2700
-      method: "constant"
-      referenceTemperature: 298.15
-    specificHeat:
-      baseValue: 900
-      method: "constant"
-      referenceTemperature: 298.15
-    thermalConductivity:
-      baseValue: 237
-      method: "polynomial"
-      coefficients: [1e-3, -2e-6]
-      referenceTemperature: 298.15
+    properties:  # Ensure all properties are nested under "properties"
+      density:
+        baseValue: 2700
+        method: "constant"
+        referenceTemperature: 298.15
+      specificHeat:
+        baseValue: 900
+        method: "constant"
+        referenceTemperature: 298.15
+      thermalConductivity:
+        baseValue: 237
+        method: "polynomial"
+        coefficients: [1e-3, -2e-6]
+        referenceTemperature: 298.15
 
   boundaryConditions:
     parameters:
@@ -55,9 +56,14 @@ simulation:
           value: 330
 
   solver:
-    type: "GaussSeidel"
+    method: "bicgstab"
     tolerance: 1e-8
     maxIterations: 1000
+    preconditioner: "jacobi"
 
   timeControl:
     steadyState: true  # Indicates that this is a steady-state problem
+
+  visualization:
+    path: "./results"
+    variableName: "temperature_cell"

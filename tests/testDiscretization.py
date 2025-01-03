@@ -25,14 +25,9 @@ class TestDiscretization(unittest.TestCase):
         
         # Initialize MaterialProperty for Aluminum and add thermal conductivity
         self.prop = MaterialProperty('Aluminum')
-        self.prop.add_property('thermal_conductivity', baseValue=200, referenceTemperature=298.15, method='constant')
+        self.prop.add_property('thermalConductivity', baseValue=200, referenceTemperature=298.15, method='constant')
         
-        # Initialize solver with default empty matrix and vector
-        numCells = self.mesh.GetNumberOfCells()
-        A = sp.lil_matrix((numCells, numCells))  # Empty sparse matrix
-        b = np.zeros(numCells)  # Zero vector
-        
-        self.solver = Solver(A, b)
+        self.solver = Solver(self.mesh.A, self.mesh.b)
 
         # Initialize boundary condition
         self.bc = BoundaryCondition(self.mesh)
@@ -74,22 +69,20 @@ class TestDiscretization(unittest.TestCase):
         # Access the property directly from the MaterialProperty object
         self.discretization.discretizeHeatDiffusion()
 
-        num_cells = self.mesh.GetNumberOfCells()
-
         # Test matrix dimensions
-        self.assertEqual(self.solver.A.shape, (num_cells, num_cells), "Matrix A dimensions should match the number of cells.")
-        self.assertEqual(self.solver.b.shape[0], num_cells, "Vector b length should match the number of cells.")
+        self.assertEqual(self.mesh.A.shape, (self.mesh.numCells, self.mesh.numCells), "Matrix A dimensions should match the number of cells.")
+        self.assertEqual(self.mesh.b.shape[0], self.mesh.numCells, "Vector b length should match the number of cells.")
         
         # Test matrix sparsity
-        non_zero_elements = self.solver.A.count_nonzero()
+        non_zero_elements = self.mesh.A.count_nonzero()
         self.assertGreater(non_zero_elements, 0, "Matrix A should have non-zero elements after discretization.")
 
         # Test if the diagonal has non-zero values
-        for i in range(num_cells):
-            self.assertNotEqual(self.solver.A[i, i], 0, f"Diagonal element A[{i},{i}] should not be zero.")
+        for i in range(self.mesh.numCells):
+            self.assertNotEqual(self.mesh.A[i, i], 0, f"Diagonal element A[{i},{i}] should not be zero.")
 
         # Plot the sparse matrix after discretization
         outputFilename = os.path.join(self.outputDir, "test_matrix_plot.jpeg")
-        self.solver.plotSparseMatrix(self.solver.A, filename=outputFilename)
+        self.solver.plotSparseMatrix(self.mesh.A, filename=outputFilename)
 
         print("Sparse matrix visualization saved as 'test_matrix_plot.jpeg'.")

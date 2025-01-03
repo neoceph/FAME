@@ -11,10 +11,11 @@ class FVM:
         self.config = config
         self.mesh = None
         self.boundaryConditions = None
-        self.material_properties = None
+        self.materialProperties = None
         self.discretization = None
         self.solver = None
         self.visualization = None
+        self.output = None
 
     def meshGeneration(self):
         domain = self.config['simulation']['domain']
@@ -58,85 +59,83 @@ class FVM:
 
         print("Boundary conditions applied.")
 
-
-
-    def _applyMultipleBoundaryConditions(self, x, y, z, bc):
-        bcType = bc['type']
-        bcValue = bc['value']
-        self.boundaryConditions.applyBoundaryCondition(x, y, z, bcValue)
-        print(f"Applied {bcType} of {bcValue} at {'x' if x else 'y' if y else 'z'} = {x or y or z}")
-
     def loadMaterialProperty(self):
         material_config = self.config.get('simulation', {}).get('material', {})
-        self.material_properties = {}
+        self.materialProperties = {}
 
         material_name = material_config.get('name', 'Unknown Material')
-
-        # Initialize MaterialProperty instance for the material
         material_property = prop(material_name)
 
-        # Add each property to the material
-        for property_name, property_details in material_config.items():
-            if property_name != 'name':
-                # Handle scalar values by converting to dictionary
-                if isinstance(property_details, (int, float)):
-                    property_details = {
-                        'baseValue': property_details,
-                        'method': 'constant',
-                        'referenceTemperature': 298.15  # Default reference temperature
-                    }
+        # Loop over properties inside 'properties' block
+        for property_name, property_details in material_config.get('properties', {}).items():
+            base_value = property_details.get('baseValue', 0)
+            method = property_details.get('method', 'constant')
+            coefficients = property_details.get('coefficients', [])
+            # Ensure coefficients are converted to floats
+            coefficients = [float(c) for c in coefficients]
+            reference_temperature = property_details.get('referenceTemperature', 298.15)
 
-                base_value = property_details.get('baseValue', 0)
-                method = property_details.get('method', 'constant')
-                reference_temperature = property_details.get('referenceTemperature', 298.15)
-                coefficients = property_details.get('coefficients', [])
+            # Add the property
+            material_property.add_property(
+                propertyName=property_name,
+                baseValue=base_value,
+                method=method,
+                referenceTemperature=reference_temperature,
+                coefficients=coefficients
+            )
+            print(f"Added {property_name} to {material_name} with method {method}.")
 
-                material_property.add_property(
-                    propertyName=property_name,
-                    baseValue=base_value,
-                    referenceTemperature=reference_temperature,
-                    method=method,
-                    coefficients=coefficients
-                )
-                print(f"Loaded {property_name} for {material_name} with base value: {base_value}, method: {method}, reference temperature: {reference_temperature}")
+        # Store the populated material property
+        self.materialProperties[material_name] = material_property
+        print(f"Material properties successfully initialized for {material_name}.")
 
-        # Store the material property
-        self.material_properties[material_name] = material_property
-
-        print("Material properties successfully initialized.")
-
-    def discretization(self):
+    def discretize(self):
         if not self.mesh:
             raise ValueError("Mesh must be generated before discretization.")
-        self.discretization = disc.Discretization(self.mesh)
-        scheme = self.config['simulation'].get('discretization', {}).get('scheme', 'central')
-        self.discretization.applyDiscretization(scheme)
-        print(f"Discretization applied using {scheme} scheme.")
-
+        material_name = self.config['simulation']['material']['name']  # Get material name dynamically
+        self.discretization = disc(self.mesh, self.solver, self.materialProperties[material_name], self.boundaryConditions)
+        self.discretization.discretizeHeatDiffusion()
+        print("Discretization applied.")
+    
     def solveEquations(self):
-        if not self.discretization:
-            raise ValueError("Discretization must be performed before solving.")
-        self.solver = sol.Solver(self.discretization)
-        solver_type = self.config['simulation'].get('solver', {}).get('type', 'GaussSeidel')
-        tolerance = self.config['simulation'].get('solver', {}).get('tolerance', 1e-8)
-        maxIterations = self.config['simulation'].get('solver', {}).get('maxIterations', 1000)
-        self.solver.solve(solver_type, tolerance, maxIterations)
+        if not self.mesh:
+            raise ValueError("Mesh must be generated before solving.")
+        
+        self.solver = sol(self.mesh.A, self.mesh.b)
+        solver_type = self.config['simulation'].get('solver', {}).get('method')
+        tolerance = self.config['simulation'].get('solver', {}).get('tolerance')
+        maxIterations = self.config['simulation'].get('solver', {}).get('maxIterations')
+        self.solution = self.solver.solve(method=solver_type, preconditioner="none")
         print(f"Solver {solver_type} completed with tolerance {tolerance} and max iterations {maxIterations}.")
-
+    
     def visualizeResults(self):
-        if not self.solver or not self.solver.solution:
+        if not self.solver or self.solver.solution is None:
             raise ValueError("Solution must exist before visualization.")
-        self.visualization = vis.Visualization(self.mesh, self.solver.solution)
-        output_type = self.config['simulation'].get('visualization', {}).get('type', 'contour')
-        output_path = self.config['simulation'].get('visualization', {}).get('path', './testOutput')
-        self.visualization.generateOutput(output_type, output_path)
-        print(f"Visualization generated and saved at {output_path} as {output_type} plot.")
+            
+        # Initialize MeshWriter with the mesh
+        self.visualization = vis(self.mesh)
+
+        # Read variable name from YAML or default to 'temperature_cell'
+        variable_name = self.config['simulation'].get('visualization', {}).get('variableName', 'temperature_cell')
+
+        # Prepare the solution as a cell variable dictionary
+        solution, err, info = self.solution
+        variables = {
+            variable_name: solution
+        }
+        
+        # Read the output path from YAML or default to current directory
+        output_path = self.config['simulation'].get('visualization', {}).get('path', './')
+        
+        # Write the VTS file
+        self.visualization.writeVTS(output_path, variables)
+        print(f"Visualization generated and saved at {output_path} with variable '{variable_name}'.")
 
     def simulate(self):
         self.meshGeneration()
         self.applyBoundaryConditions()
         self.loadMaterialProperty()
-        self.discretization()
+        self.discretize()
         self.solveEquations()
         self.visualizeResults()
         print("Simulation complete.")
