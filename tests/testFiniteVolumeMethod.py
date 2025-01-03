@@ -72,7 +72,7 @@ class TestDiscretization(unittest.TestCase):
         self.assertIsNotNone(self.fvm.boundaryConditions)
         self.assertIn('thermalConductivity', self.fvm.materialProperties['Aluminum'].properties)
         self.assertIsNotNone(self.fvm.solver)
-        output_path = './testOutput'
+        output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
         self.assertTrue(os.path.exists(output_path))
         print("Full simulation test passed.")
 
@@ -99,6 +99,6 @@ class TestDiscretizationSmall(TestDiscretization):
         self.assertIsNotNone(self.fvm.boundaryConditions)
         self.assertIn('thermalConductivity', self.fvm.materialProperties['Aluminum'].properties)
         self.assertIsNotNone(self.fvm.solver)
-        output_path = './testOutput'
+        output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
         self.assertTrue(os.path.exists(output_path))
         print("Full simulation test passed.")

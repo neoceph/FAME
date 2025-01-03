@@ -37,7 +37,7 @@ class FVM:
         self.boundaryConditions = bc(
             self.mesh,
             **{key: boundary_config.get('temperature', {}).get(key, 0)
-            for key in ['variableType', 'convectionCoefficient', 'emmissivity', 'ambientTemperature']}
+            for key in ['variableType', 'convectionCoefficient', 'emmissivity', 'dependentSource', 'independentSource', 'volumetricSource', 'ambientTemperature']}
         )
 
         conditions = self.config['simulation'].get('boundaryConditions', {})
