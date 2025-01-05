@@ -6,7 +6,16 @@ from scipy.spatial import ConvexHull
 from tqdm import tqdm
 
 
-class StructuredMesh(vtk.vtkStructuredGrid):
+class StructuredMesh:
+    def __new__(cls, bounds, divisions):
+        """
+        Dynamically instantiate the correct subclass based on the dimensionality.
+        """
+        if len(divisions) == 1:
+            return vtk.vtkPolyData.__new__(StructuredMesh1D)
+        else:
+            return vtk.vtkStructuredGrid.__new__(StructuredMesh3D)    
+    
     def __init__(self, bounds, divisions):
         """
         Initializes the StructuredMesh.
@@ -21,30 +30,43 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         self.cellCenters = []
         self.faces = {}
         self.faceCenters = {}
-    
         self.divisions = divisions
+        self.is_1D = len(divisions) == 1
+
+        # Create vtkStructuredGrid or vtkPolyData depending on 1D or 3D mesh
+        # self.mesh = vtk.vtkPolyData() if self.is_1D else vtk.vtkStructuredGrid()
 
         # Generate grid points
         self._generateGrid(bounds, divisions)
-
-        # Compute cell centers, neighborcell, cell faces
         self._computeCellFaces()
         self._computeCellCenter()
         self._computeNeighbors()
-
+        
         self.numCells = self.GetNumberOfCells()
+
         self.A = sp.lil_matrix((self.numCells, self.numCells))  # Use LIL format for construction
         self.b = np.zeros(self.numCells)
 
+
+class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
+    
+    def __init__(self, bounds, divisions):
+        vtk.vtkStructuredGrid.__init__(self)
+        super().__init__(bounds, divisions)
+
+    def GetNumberOfCells(self):
+        return super().GetNumberOfCells()
+    
     def _generateGrid(self, bounds, divisions):
         """
         Generates the structured grid points and sets dimensions.
         """
+        # Create points
+        points = vtk.vtkPoints()
+        
         (x_min, x_max), (y_min, y_max), (z_min, z_max) = bounds
         div_x, div_y, div_z = divisions
 
-        # Create points
-        points = vtk.vtkPoints()
         dx = (x_max - x_min) / div_x
         dy = (y_max - y_min) / div_y
         dz = (z_max - z_min) / div_z
@@ -82,6 +104,7 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         """
         Computes shared cell information for all cells.
         """
+        self.sharedCells = []
         for cell_id in range(self.GetNumberOfCells()):
             currentCell = self.GetCell(cell_id)
             points = currentCell.GetPoints()
@@ -378,3 +401,122 @@ class StructuredMesh(vtk.vtkStructuredGrid):
         volume /= len(face_ids)
 
         return abs(volume)
+
+
+class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
+    def __init__(self, bounds, divisions):
+        vtk.vtkPolyData.__init__(self)
+        super().__init__(bounds, divisions)
+
+    def GetNumberOfCells(self):
+        return self.GetNumberOfLines()
+
+    def _generateGrid(self, bounds, divisions):
+        """
+        Generates the structured grid points and sets dimensions.
+        """
+        # Create points
+        points = vtk.vtkPoints()
+        
+        # 1D mesh: Generate points along a line
+        (x_min, x_max) = bounds
+        div_x = divisions[0]
+        dx = (x_max - x_min) / div_x
+
+        for i in range(div_x + 1):
+            x = x_min + i * dx
+            points.InsertNextPoint(x, 0, 0)  # 1D is along x-axis, y/z set to 0
+
+        # Create vtkPolyData for 1D mesh
+        lines = vtk.vtkCellArray()
+        for i in range(div_x):
+            line = vtk.vtkLine()
+            line.GetPointIds().SetId(0, i)
+            line.GetPointIds().SetId(1, i + 1)
+            lines.InsertNextCell(line)
+
+        # polydata = vtk.vtkPolyData()
+        # polydata.SetPoints(points)
+        # polydata.SetLines(lines)
+        # self.polydata = polydata
+        
+    def _computeCellFaces(self):
+
+        # Directly use point IDs to represent unique faces
+        self.faces = {}  # Reset face storage
+        self.faceCenters = {}
+
+        num_points = self.polydata.GetNumberOfPoints()
+
+        for i in range(num_points):
+            # Use the point ID as the face ID
+            point_id = i
+            self.faces[point_id] = (point_id,)
+            self.faceCenters[point_id] = self.polydata.GetPoint(point_id)
+
+    def _computeCellCenter(self):
+        """
+        Computes the centers of all cells using vtkCellCenters.
+        """
+        # For 1D, compute center of each line segment
+        self.cellCenters = []
+        for i in range(self.polydata.GetNumberOfCells()):
+            line = self.polydata.GetCell(i)
+            p1 = np.array(self.polydata.GetPoint(line.GetPointId(0)))
+            p2 = np.array(self.polydata.GetPoint(line.GetPointId(1)))
+            center = (p1 + p2) / 2
+            self.cellCenters.append(center)
+
+    def _computeNeighbors(self):
+        """
+        Computes shared cell information for all cells.
+        """
+        self.sharedCells = []
+        num_cells = self.polydata.GetNumberOfCells()
+
+        # Iterate over cells (line segments)
+        for cell_id in range(num_cells):
+            line = self.polydata.GetCell(cell_id)
+            p1 = line.GetPointId(0)  # Start point of line segment
+            p2 = line.GetPointId(1)  # End point of line segment
+
+            # Shared cells and faces
+            shared_cells = []
+            shared_faces = set()
+
+            if cell_id > 0:
+                shared_cells.append(cell_id - 1)  # Left neighbor
+                shared_faces.add(p1)  # Shared face at left endpoint
+
+            if cell_id < num_cells - 1:
+                shared_cells.append(cell_id + 1)  # Right neighbor
+                shared_faces.add(p2)  # Shared face at right endpoint
+
+            # Boundary faces
+            boundary_faces = set()
+            if cell_id == 0:  # Leftmost cell
+                boundary_faces.add(p1)
+            if cell_id == num_cells - 1:  # Rightmost cell
+                boundary_faces.add(p2)
+
+            # Store results
+            self.sharedCells.append({
+                "cell_id": cell_id,
+                "shared_cells": shared_cells,
+                "shared_faces": list(shared_faces),
+                "boundary_faces": list(boundary_faces)
+            })
+
+
+    def _computeCellFaces(self):
+        # Directly use point IDs to represent unique faces
+        self.faces = {}  # Reset face storage
+        self.faceCenters = {}
+
+        num_points = self.polydata.GetNumberOfPoints()
+
+        for i in range(num_points):
+            # Use the point ID as the face ID
+            point_id = i
+            self.faces[point_id] = (point_id,)
+            self.faceCenters[point_id] = self.polydata.GetPoint(point_id)

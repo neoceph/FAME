@@ -11,8 +11,8 @@ class TestStructuredMesh(unittest.TestCase):
         """
         Set up a StructuredMesh object for each test case.
         """
-        self.bounds = ((0, 10), (0, 5), (0, 3))
-        self.divisions = (10, 5, 3)
+        self.bounds = [(0, 10), (0, 5), (0, 3)]
+        self.divisions = [10, 5, 3]
         self.mesh = StructuredMesh(self.bounds, self.divisions)
 
     def testMeshInitialization(self):
@@ -25,7 +25,7 @@ class TestStructuredMesh(unittest.TestCase):
         div_y = ny - 1
         div_z = nz - 1
         
-        self.assertEqual((div_x, div_y, div_z), self.divisions)
+        self.assertEqual([div_x, div_y, div_z], self.divisions)
 
         # Verify points are generated
         self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 4)
@@ -434,3 +434,27 @@ class TestStructuredMesh(unittest.TestCase):
 
         result = self.mesh.getFacesByCoordinates(z=self.bounds[2][1], tolerance=0.1)
         self.assertEqual(len(result), expectedCellFaces)        
+
+# class TestStructuredMesh1D(unittest.TestCase):
+#     def setUp(self):
+#         """
+#         Set up a StructuredMesh object with smaller bounds and finer divisions.
+#         """
+#         self.bounds = [0, 5]
+#         self.divisions = [5]
+#         self.mesh = StructuredMesh(self.bounds, self.divisions)
+
+#     def testMeshInitialization(self):
+#         """
+#         Test that the StructuredMesh is initialized correctly.
+#         """
+#         # Verify dimensions
+#         nx, ny, nz = self.mesh.GetDimensions()
+#         div_x = nx - 1
+#         div_y = ny - 1
+#         div_z = nz - 1
+        
+#         self.assertEqual((div_x, div_y, div_z), self.divisions)
+
+#         # Verify points are generated
+#         self.assertEqual(self.mesh.GetNumberOfPoints(), 11 * 6 * 4)
