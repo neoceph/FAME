@@ -31,7 +31,7 @@ class StructuredMesh:
         self.faces = {}
         self.faceCenters = {}
         self.divisions = divisions
-        self.is_1D = len(divisions) == 1
+        # self.is_1D = len(divisions) == 1
 
         # Create vtkStructuredGrid or vtkPolyData depending on 1D or 3D mesh
         # self.mesh = vtk.vtkPolyData() if self.is_1D else vtk.vtkStructuredGrid()
@@ -408,6 +408,9 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         vtk.vtkPolyData.__init__(self)
         super().__init__(bounds, divisions)
 
+        # Define faceArea as a float variable specific to 1D mesh
+        self.faceArea = 1.0
+
     def GetNumberOfCells(self):
         return self.GetNumberOfLines()
 
@@ -435,10 +438,8 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
             line.GetPointIds().SetId(1, i + 1)
             lines.InsertNextCell(line)
 
-        # polydata = vtk.vtkPolyData()
-        # polydata.SetPoints(points)
-        # polydata.SetLines(lines)
-        # self.polydata = polydata
+        self.SetPoints(points)
+        self.SetLines(lines)
         
     def _computeCellFaces(self):
 
@@ -446,13 +447,13 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         self.faces = {}  # Reset face storage
         self.faceCenters = {}
 
-        num_points = self.polydata.GetNumberOfPoints()
+        num_points = self.GetNumberOfPoints()
 
         for i in range(num_points):
             # Use the point ID as the face ID
             point_id = i
             self.faces[point_id] = (point_id,)
-            self.faceCenters[point_id] = self.polydata.GetPoint(point_id)
+            self.faceCenters[point_id] = self.GetPoint(point_id)
 
     def _computeCellCenter(self):
         """
@@ -460,10 +461,10 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         """
         # For 1D, compute center of each line segment
         self.cellCenters = []
-        for i in range(self.polydata.GetNumberOfCells()):
-            line = self.polydata.GetCell(i)
-            p1 = np.array(self.polydata.GetPoint(line.GetPointId(0)))
-            p2 = np.array(self.polydata.GetPoint(line.GetPointId(1)))
+        for i in range(self.GetNumberOfCells()):
+            line = self.GetCell(i)
+            p1 = np.array(self.GetPoint(line.GetPointId(0)))
+            p2 = np.array(self.GetPoint(line.GetPointId(1)))
             center = (p1 + p2) / 2
             self.cellCenters.append(center)
 
@@ -472,11 +473,11 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         Computes shared cell information for all cells.
         """
         self.sharedCells = []
-        num_cells = self.polydata.GetNumberOfCells()
+        num_cells = self.GetNumberOfCells()
 
         # Iterate over cells (line segments)
         for cell_id in range(num_cells):
-            line = self.polydata.GetCell(cell_id)
+            line = self.GetCell(cell_id)
             p1 = line.GetPointId(0)  # Start point of line segment
             p2 = line.GetPointId(1)  # End point of line segment
 
@@ -507,16 +508,50 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
                 "boundary_faces": list(boundary_faces)
             })
 
-
     def _computeCellFaces(self):
         # Directly use point IDs to represent unique faces
         self.faces = {}  # Reset face storage
         self.faceCenters = {}
 
-        num_points = self.polydata.GetNumberOfPoints()
+        num_points = self.GetNumberOfPoints()
 
         for i in range(num_points):
             # Use the point ID as the face ID
             point_id = i
             self.faces[point_id] = (point_id,)
-            self.faceCenters[point_id] = self.polydata.GetPoint(point_id)
+            self.faceCenters[point_id] = self.GetPoint(point_id)
+
+    def GetDimensions(self):
+        """
+        Returns the dimensions for the 1D mesh.
+        
+        For a 1D mesh, the x-dimension is derived from the number of cells,
+        and y and z dimensions are always 1.
+        
+        Returns:
+            tuple: (nx, ny, nz)
+        """
+        n = self.GetNumberOfCells() + 1  # Number of points is cells + 1
+        return n
+
+    def getSharedCellsInfo(self, cell_id):
+        """
+        Retrieve shared cells information for a specific cell.
+
+        Args:
+            cell_id (int): ID of the cell.
+
+        Returns:
+            dict: Information about shared cells and shared vertices.
+        """
+        if 0 <= cell_id < len(self.sharedCells):
+            return self.sharedCells[cell_id]
+        else:
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+        
+    def calculateArea(self, vtk_points, includeNormal=False):
+        """
+        Return the constant face area if nothing is specified
+        """
+
+        return self.faceArea
