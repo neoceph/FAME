@@ -33,7 +33,7 @@ simulation:
       0:  
         - type: "temperature"
           value: 100
-      1:
+      0.5:
         - type: "temperature"
           value: 500
 

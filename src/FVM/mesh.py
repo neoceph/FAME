@@ -579,3 +579,32 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         """
 
         return self.faceArea
+    
+    def getCellVolume(self, cell_id):
+        """
+        Calculate the volume of a 1D cell using its length and face area.
+
+        Args:
+            cell_id (int): ID of the cell.
+
+        Returns:
+            float: Volume of the cell.
+        
+        Raises:
+            ValueError: If the cell ID is out of range.
+        """
+        if cell_id < 0 or cell_id >= self.GetNumberOfCells():
+            raise ValueError(f"Cell ID {cell_id} is out of range.")
+        
+        # Get the line segment representing the cell
+        line = self.GetCell(cell_id)
+        p1 = np.array(self.GetPoint(line.GetPointId(0)))
+        p2 = np.array(self.GetPoint(line.GetPointId(1)))
+
+        # Calculate the length of the line segment
+        cell_length = np.linalg.norm(p2 - p1)
+
+        # Calculate volume (length * cross-sectional area)
+        volume = cell_length * self.faceArea
+
+        return volume

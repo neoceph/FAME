@@ -114,7 +114,7 @@ class FVM:
             raise ValueError("Solution must exist before visualization.")
             
         # Initialize MeshWriter with the mesh
-        self.visualization = vis(self.mesh)
+        self.visualization = MeshWriter(self.mesh)
 
         # Read variable name from YAML or default to 'temperature_cell'
         variable_name = self.config['simulation'].get('visualization', {}).get('variableName', 'temperature_cell')
@@ -161,3 +161,26 @@ class FVM1D(FVM):
         divisions = (domain['divisions']['x'])
         self.mesh = StructuredMesh1D(bounds, divisions)
         print("1D Mesh initialized.")
+
+    def visualizeResults(self):
+        if not self.solver or self.solver.solution is None:
+            raise ValueError("Solution must exist before visualization.")
+            
+        # Initialize MeshWriter with the mesh
+        self.visualization = MeshWriter1D(self.mesh)
+
+        # Read variable name from YAML or default to 'temperature_cell'
+        variable_name = self.config['simulation'].get('visualization', {}).get('variableName', 'temperature_cell')
+
+        # Prepare the solution as a cell variable dictionary
+        solution, err, info = self.solution
+        variables = {
+            variable_name: solution
+        }
+        
+        # Read the output path from YAML or default to current directory
+        output_path = self.config['simulation'].get('visualization', {}).get('path', './')
+        
+        # Write the VTS file
+        self.visualization.writeVTS(output_path, variables)
+        print(f"Visualization generated and saved at {output_path} with variable '{variable_name}'.")
