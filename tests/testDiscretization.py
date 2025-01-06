@@ -51,7 +51,7 @@ class TestDiscretization(unittest.TestCase):
         Test if Discretization object initializes correctly with given material property.
         """
         # Evaluate the thermal conductivity using the property object
-        thermal_conductivity = self.prop.evaluate('thermal_conductivity', 298.15)
+        thermal_conductivity = self.prop.evaluate('thermalConductivity', 298.15)
         self.assertEqual(thermal_conductivity, 200, "Thermal conductivity should be set to 200.")
         
         # Test other property fallback
