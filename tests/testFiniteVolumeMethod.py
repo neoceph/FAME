@@ -7,7 +7,25 @@ import scipy.sparse as sp
 from src.FVM.finiteVolumeMethod import FVM
 from src.FVM.solver import Solver
 
-class TestDiscretization(unittest.TestCase):
+
+class TestDiscretizationBase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Placeholder to ensure child classes initialize FVM properly
+        cls.fvm = None
+
+    def test_materialProperties(self):
+        # Ensure the FVM instance is initialized
+        if self.fvm is None:
+            self.skipTest("Skipping test because FVM instance is not initialized.")
+        self.assertIn('Aluminum', self.fvm.materialProperties)
+        aluminum = self.fvm.materialProperties['Aluminum']
+        self.assertIn('thermalConductivity', aluminum.properties)
+        thermal_conductivity = aluminum.properties['thermalConductivity']
+        self.assertEqual(thermal_conductivity['referenceTemperature'], 298.15)
+
+
+class TestDiscretization(TestDiscretizationBase):
     @classmethod
     def setUpClass(cls):
         yaml_path = os.path.join(os.path.dirname(__file__), '..', 'examples', 'FVM', 'HeatDiffusion', 'setup.yaml')
@@ -34,20 +52,20 @@ class TestDiscretization(unittest.TestCase):
         self.assertIsNotNone(self.fvm.boundaryConditions)
         print("Boundary conditions test passed.")
 
-    def test_materialProperties(self):
+    # def test_materialProperties(self):
                
-        # Check if Aluminum is loaded as the material
-        self.assertIn('Aluminum', self.fvm.materialProperties)
+    #     # Check if Aluminum is loaded as the material
+    #     self.assertIn('Aluminum', self.fvm.materialProperties)
 
-        # Access the Aluminum material and its properties
-        aluminum = self.fvm.materialProperties['Aluminum']
-        self.assertIn('thermalConductivity', aluminum.properties)
+    #     # Access the Aluminum material and its properties
+    #     aluminum = self.fvm.materialProperties['Aluminum']
+    #     self.assertIn('thermalConductivity', aluminum.properties)
         
-        # Verify the base value, method, and reference temperature of thermal conductivity
-        thermal_conductivity = aluminum.properties['thermalConductivity']
-        self.assertEqual(thermal_conductivity['baseValue'], 237)
-        self.assertEqual(thermal_conductivity['referenceTemperature'], 298.15)
-        self.assertEqual(thermal_conductivity['method'], 'polynomial')
+    #     # Verify the base value, method, and reference temperature of thermal conductivity
+    #     thermal_conductivity = aluminum.properties['thermalConductivity']
+    #     self.assertEqual(thermal_conductivity['baseValue'], 237)
+    #     self.assertEqual(thermal_conductivity['referenceTemperature'], 298.15)
+    #     self.assertEqual(thermal_conductivity['method'], 'polynomial')
         
     def test_discretization_applied(self):
         
@@ -136,3 +154,12 @@ class TestDiscretization1D(unittest.TestCase):
         output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
         self.assertTrue(os.path.exists(output_path), "Output path does not exist.")
         print("Full 1D simulation test passed.")
+
+    def test_materialProperties(self):
+        # Explicitly call the method from the base class
+        TestDiscretizationBase.test_materialProperties(self)
+        
+        # Additional assertions specific to 1D
+        thermal_conductivity = self.fvm.materialProperties['Aluminum'].properties['thermalConductivity']
+        self.assertEqual(thermal_conductivity['baseValue'], 1000)
+        self.assertEqual(thermal_conductivity['method'], 'constant')

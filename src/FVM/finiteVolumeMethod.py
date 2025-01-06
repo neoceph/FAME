@@ -16,6 +16,7 @@ class FVM:
             instance = super(FVM, FVM1D).__new__(FVM1D)
         else:
             instance = super(FVM, FVM3D).__new__(FVM3D)
+        instance.__init__(config)
         return instance
 
     def __init__(self, config):
