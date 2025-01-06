@@ -102,3 +102,37 @@ class TestDiscretizationSmall(TestDiscretization):
         output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
         self.assertTrue(os.path.exists(output_path))
         print("Full simulation test passed.")
+
+
+class TestDiscretization1D(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        yaml_path = os.path.join(os.path.dirname(__file__), '..', 'examples', 'FVM', 'HeatDiffusion', 'setup_1D.yaml')
+        with open(yaml_path, 'r') as file:
+            cls.config = yaml.safe_load(file)
+
+        # Dynamically create FVM instance based on the new static __new__ method
+        cls.fvm = FVM(cls.config)
+        
+        # Initialize mesh, boundary conditions, and material properties
+        cls.fvm.meshGeneration()
+        cls.fvm.applyBoundaryConditions()
+        cls.fvm.loadMaterialProperty()
+
+        # Set up solver and discretization
+        cls.fvm.solver = Solver(cls.fvm.mesh.A, cls.fvm.mesh.b)
+        cls.fvm.discretize()
+        cls.fvm.solveEquations()
+
+    def test_fullSimulation(self):
+        # Run full simulation and check that all parts are initialized correctly
+        self.fvm.simulate()
+        self.assertIsNotNone(self.fvm.mesh, "Mesh is not initialized.")
+        self.assertIsNotNone(self.fvm.boundaryConditions, "Boundary conditions not applied.")
+        self.assertIn('thermalConductivity', self.fvm.materialProperties['Aluminum'].properties)
+        self.assertIsNotNone(self.fvm.solver, "Solver is not initialized.")
+        
+        # Verify output path
+        output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
+        self.assertTrue(os.path.exists(output_path), "Output path does not exist.")
+        print("Full 1D simulation test passed.")

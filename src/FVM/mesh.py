@@ -549,6 +549,30 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         else:
             raise ValueError(f"Cell ID {cell_id} is out of range.")
         
+    def getFacesByCoordinates(self, x=None, tolerance=1e-6):
+        """
+        Retrieve face IDs by proximity to x-coordinate in 1D mesh.
+
+        Args:
+            x (float, optional): x-coordinate to filter faces.
+            tolerance (float, optional): Distance tolerance for matching faces.
+
+        Returns:
+            list: List of face IDs within the tolerance of the provided x-coordinate.
+
+        Raises:
+            ValueError: If x is not provided.
+        """
+        if x is None:
+            raise ValueError("x-coordinate must be provided for 1D mesh.")
+
+        matching_faces = []
+        for fid, center in self.faceCenters.items():
+            if abs(center[0] - x) <= tolerance:
+                matching_faces.append(fid)
+        
+        return matching_faces
+        
     def calculateArea(self, vtk_points, includeNormal=False):
         """
         Return the constant face area if nothing is specified

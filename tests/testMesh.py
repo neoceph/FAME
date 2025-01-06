@@ -587,3 +587,24 @@ class TestStructuredMesh1D(unittest.TestCase):
                 self.mesh.faceArea,
                 f"calculateArea() should return faceArea for face {face_id}."
             )
+
+    def testGetFacesByX(self):
+        """
+        Test retrieval of face IDs by x-coordinate in 1D mesh.
+        """
+        # Check at start of the domain (x_min)
+        result = self.mesh.getFacesByCoordinates(x=self.bounds[0], tolerance=0.1)
+        self.assertEqual(len(result), 1, "Failed to get face at x_min.")
+
+        # Check at the end of the domain (x_max)
+        result = self.mesh.getFacesByCoordinates(x=self.bounds[1], tolerance=0.1)
+        self.assertEqual(len(result), 1, "Failed to get face at x_max.")
+
+        # Check in the middle of the domain
+        location = 1.0
+        result = self.mesh.getFacesByCoordinates(x=location, tolerance=0.1)
+        self.assertEqual(len(result), 1, "Failed to get face at midpoint.")
+
+        # Test with no matching faces (out of bounds)
+        result = self.mesh.getFacesByCoordinates(x=self.bounds[1] + 5, tolerance=0.1)
+        self.assertEqual(len(result), 0, "Unexpected face found outside the domain.")

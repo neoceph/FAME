@@ -1,12 +1,23 @@
+import vtk
+import numpy as np
+import scipy.sparse as sp
 from .boundaryCondition import BoundaryCondition as bc
 from .discretization import Discretization as disc
-from .mesh import StructuredMesh as mesh
+from .mesh import StructuredMesh, StructuredMesh1D
 from .property import MaterialProperty as prop
 from .solver import Solver as sol
-from .visualization import MeshWriter as vis
-
+from .visualization import MeshWriter, MeshWriter1D
 
 class FVM:
+    def __new__(cls, config):
+        domain = config['simulation']['domain']
+        divisions = domain['divisions']
+        if len(divisions) == 1:
+            instance = super(FVM, FVM1D).__new__(FVM1D)
+        else:
+            instance = super(FVM, FVM3D).__new__(FVM3D)
+        return instance
+
     def __init__(self, config):
         self.config = config
         self.mesh = None
@@ -18,17 +29,7 @@ class FVM:
         self.output = None
 
     def meshGeneration(self):
-        domain = self.config['simulation']['domain']
-        bounds = (
-            tuple(domain['size']['x']),
-            tuple(domain['size']['y']),
-            tuple(domain['size']['z'])
-        )
-        div_x = domain['divisions']['x']
-        div_y = domain['divisions']['y']
-        div_z = domain['divisions']['z']
-        self.mesh = mesh(bounds, (div_x, div_y, div_z))
-        print("Mesh initialized.")
+        raise NotImplementedError("meshGeneration must be implemented by subclass.")
 
     def applyBoundaryConditions(self):
         boundary_config = self.config['simulation'].get('boundaryConditions', {}).get('parameters', {})
@@ -139,3 +140,24 @@ class FVM:
         self.solveEquations()
         self.visualizeResults()
         print("Simulation complete.")
+
+
+class FVM3D(FVM):
+    def meshGeneration(self):
+        domain = self.config['simulation']['domain']
+        bounds = (
+            tuple(domain['size']['x']),
+            tuple(domain['size']['y']),
+            tuple(domain['size']['z'])
+        )
+        divisions = (domain['divisions']['x'], domain['divisions']['y'], domain['divisions']['z'])
+        self.mesh = StructuredMesh(bounds, divisions)
+        print("3D Mesh initialized.")
+
+class FVM1D(FVM):
+    def meshGeneration(self):
+        domain = self.config['simulation']['domain']
+        bounds = tuple(domain['size']['x'])
+        divisions = (domain['divisions']['x'])
+        self.mesh = StructuredMesh1D(bounds, divisions)
+        print("1D Mesh initialized.")
