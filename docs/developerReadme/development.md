@@ -1,12 +1,25 @@
 # Steps to setup environment for development
 
-**1.** Clone the repository from github 
+**1.** Make sure you have [anaconda](https://www.anaconda.com/download) installed and working. Clone the repository from github 
 ```bash
 git clone https://github.com/neoceph/FAME
 ```
 **2.** Create appropriate python environment by issuing the following command
 ```bash
-conda env create -f environment.yaml
+conda env create -f environment_linux.yaml
+```
+If there are errors, try
+```bash
+conda env create -f environment_linux.yaml --force
+```
+If environment is created and needs updating the packages list after dependancy install (i.e. petsc4py) try
+```bash
+conda env update --name FAME --file environment_linux.yaml
+```
+If PETSc installation is failing make sure you have BLAS and LAPACK available
+
+```bash
+conda install -c conda-forge blas lapack
 ```
 **3.** You are ready to contribute code under `.\src` or `.\tests`.
 
@@ -92,11 +105,19 @@ except AttributeError:
 You can issue these lines of code on the terminal window by running python with command `python` or paste them into a `python.py` file and running the file with appropriate environment activated.
 
 # Generating Sphinx documentation
-From the root directory run the following commands [Powershell in windows or bash in linux]
+From the root directory run the following commands [Powershell in windows]
 - `./docs/make clean`
 - `sphinx-apidoc -o ./docs/source/ ./src`
 - `./docs/make html`
-- `./docs/make latexpdf` to generate pdf. <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
+- `./docs/make latexpdf` to generate pdf. 
+<span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
+
+ Or bash in linux
+- `make -C ./docs clean`
+- `sphinx-apidoc -o ./docs/source/ ./src`
+- `make -C ./docs html`
+- `make -C ./docs latexpdf`
+<span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
 
 # Generating Docstring using VSCode extension
 
@@ -108,7 +129,7 @@ Note that it is best to write the docstrings once you have fully defined the fun
 
 ## restructred text live preview on vscode
 
-- need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to 'File->Preference->Settings' and finding Esbonio>Server:Python Path
+- need the extension `pip install esbonio` and 'esbonio'. After that make sure python path is manually setup if esbonio is having difficulty finding the python interpreter. You can do that by going to `File->Preference->Settings` and finding `Esbonio>Server:Python Path` For example: `C:\\msys64\\ucrt64\\bin\\python.exe` 
 
 ## restructured text cheatsheet
 

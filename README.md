@@ -13,17 +13,17 @@ FAME is a simulation tool designed to model the laser powder bed fusion (LPBF) a
 - **User-Friendly Interface**: Easy to set up and run simulations.
 
 ## Installation
-To install FAME, clone the repository and install the required dependencies:
+To install FAME you need to have anaconda installed then clone the repository and install the required dependencies:
 ```bash
-git clone https://github.com/yourusername/FAME.git
+git clone https://github.com/neoceph/FAME.git
 cd FAME
-pip install -r requirements.txt
+conda env create -f environment.yaml
 ```
 
 ## Usage
 To run a simulation, use the following command:
 ```bash
-python simulate.py --config your_config_file.json
+python fame.py --config your_config_file.json
 ```
 Replace `your_config_file.json` with your specific configuration file.
 
@@ -51,4 +51,4 @@ Contributions are welcome! Please fork the repository and submit a pull request.
 This project is licensed under the MIT License.
 
 ## Contact
-For any questions or issues, please contact [your email].
+For any questions or issues, please contact aamin1@udayton.edu.
