@@ -4,7 +4,7 @@ import sys
 import argparse
 
 # Adjust the import path to locate finiteVolumeMethod.py
-from src.FVM.finiteVolumeMethod import FVM
+from .FVM.finiteVolumeMethod import FVM
 
 def loadInput(file_path):
     if not os.path.exists(file_path):
@@ -18,7 +18,7 @@ def main():
     parser.add_argument(
         '--input', 
         type=str, 
-        default='../configs/simulation_config.yaml', 
+        default='config.yaml', 
         help="Path to the YAML input file"
     )
     
