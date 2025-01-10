@@ -24,7 +24,7 @@ class MaterialProperty:
             
             ii. Polynomial: :math:`material property = baseValue \cdot (1+c_0 \cdot {(\Delta T})^n + c_1 \cdot {(\Delta T})^{n-1} + ... + c_n)`
 
-            iii. Exponential: :math:`material property = a_{0} \cdot e^{\beta\Delta T}`
+            iii. Exponential: :math:`material property = a_{0} \cdot e^{\\beta\Delta T}`
         
         :param coefficients: Coefficients for polynomial or exponential models
         """
