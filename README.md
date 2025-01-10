@@ -23,7 +23,7 @@ conda env create -f environment.yaml
 ## Usage
 To run a simulation, use the following command:
 ```bash
-python fame.py --config your_config_file.json
+fame --input your_config_file.yaml
 ```
 Replace `your_config_file.json` with your specific configuration file.
 
