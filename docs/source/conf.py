@@ -47,3 +47,9 @@ html_css_files = [
     'style.css',  # Specify your custom CSS file
 ]
 autoclass_content = "both"
+
+
+# conf.py
+
+# Mock heavy or unnecessary imports
+autodoc_mock_imports = ["petsc4py", "jax"]
