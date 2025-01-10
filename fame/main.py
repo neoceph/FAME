@@ -23,7 +23,7 @@ def main():
     )
     
     args = parser.parse_args()
-    input_path = os.path.abspath(os.path.join(os.path.dirname(__file__), args.input))
+    input_path = args.input
     
     try:
         config = loadInput(input_path)
