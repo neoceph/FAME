@@ -4,8 +4,8 @@ import yaml
 import numpy as np
 import scipy.sparse as sp
 
-from src.FVM.finiteVolumeMethod import FVM
-from src.FVM.solver import Solver
+from fame.FVM.finiteVolumeMethod import FVM
+from fame.FVM.solver import Solver
 
 
 class TestDiscretizationBase(unittest.TestCase):

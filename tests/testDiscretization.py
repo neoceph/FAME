@@ -4,11 +4,11 @@ import numpy as np
 import os
 import shutil
 
-from src.FVM.mesh import StructuredMesh
-from src.FVM.property import MaterialProperty
-from src.FVM.solver import Solver
-from src.FVM.discretization import Discretization
-from src.FVM.boundaryCondition import BoundaryCondition
+from fame.FVM.mesh import StructuredMesh
+from fame.FVM.property import MaterialProperty
+from fame.FVM.solver import Solver
+from fame.FVM.discretization import Discretization
+from fame.FVM.boundaryCondition import BoundaryCondition
 
 
 class TestDiscretization(unittest.TestCase):

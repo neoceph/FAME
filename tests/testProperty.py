@@ -1,5 +1,5 @@
 import unittest
-from src.FVM.property import MaterialProperty
+from fame.FVM.property import MaterialProperty
 
 class TestMaterialProperty(unittest.TestCase):
     def setUp(self):

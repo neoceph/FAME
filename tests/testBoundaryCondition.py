@@ -2,8 +2,8 @@ import unittest
 import numpy as np
 from scipy.sparse import lil_matrix
 
-from src.FVM.boundaryCondition import BoundaryCondition
-from src.FVM.mesh import StructuredMesh, StructuredMesh1D  # Assuming StructuredMesh is defined in mesh.py
+from fame.FVM.boundaryCondition import BoundaryCondition
+from fame.FVM.mesh import StructuredMesh, StructuredMesh1D  # Assuming StructuredMesh is defined in mesh.py
 
 class TestBoundaryCondition(unittest.TestCase):
     def setUp(self):

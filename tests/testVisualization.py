@@ -2,8 +2,8 @@ import os
 import shutil
 import unittest
 import numpy as np
-from src.FVM.mesh import StructuredMesh
-from src.FVM.visualization import MeshWriter
+from fame.FVM.mesh import StructuredMesh
+from fame.FVM.visualization import MeshWriter
 
 
 class TestMeshWriter(unittest.TestCase):

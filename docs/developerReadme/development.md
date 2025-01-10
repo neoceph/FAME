@@ -21,7 +21,7 @@ If PETSc installation is failing make sure you have BLAS and LAPACK available
 ```bash
 conda install -c conda-forge blas lapack
 ```
-**3.** You are ready to contribute code under `.\src` or `.\tests`.
+**3.** You are ready to contribute code under `.\fame` or `.\tests`.
 
 ### When its time to push changes read the instructions from [here](./pushingChanges.md)
 
@@ -107,14 +107,14 @@ You can issue these lines of code on the terminal window by running python with 
 # Generating Sphinx documentation
 From the root directory run the following commands [Powershell in windows]
 - `./docs/make clean`
-- `sphinx-apidoc -o ./docs/source/ ./src`
+- `sphinx-apidoc -o ./docs/source/ ./fame`
 - `./docs/make html`
 - `./docs/make latexpdf` to generate pdf. 
 <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.
 
  Or bash in linux
 - `make -C ./docs clean`
-- `sphinx-apidoc -o ./docs/source/ ./src`
+- `sphinx-apidoc -o ./docs/source/ ./fame`
 - `make -C ./docs html`
 - `make -C ./docs latexpdf`
 <span style="color:red;">The appropriate latex compiler must be installed and available.</span>.

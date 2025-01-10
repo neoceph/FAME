@@ -3,7 +3,7 @@ import unittest
 import vtk
 import numpy as np
 
-from src.FVM.mesh import StructuredMesh  # Assuming your StructuredMesh is in the same directory as mesh.py
+from fame.FVM.mesh import StructuredMesh  # Assuming your StructuredMesh is in the same directory as mesh.py
 
 
 class TestStructuredMesh(unittest.TestCase):
