@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.abspath('../..'))  # Path to root
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'FAME'
-copyright = '2024, Abdullah Al Amin'
+copyright = '2024~2025, Abdullah Al Amin'
 author = 'Abdullah Al Amin'
-release = '2024.11'
+release = '2025.01'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
