@@ -33,3 +33,13 @@ or to pypi
 ```bash
 python3 -m twine upload --repository pypi dist/* --verbose
 ```
+
+***9.*** Upload only the metadata
+```bash
+python3 -m twine upload --skip-existing dist/* --verbose
+```
+
+or to pypi
+```bash
+python3 -m twine upload --skip-existing dist/* --verbose
+```
