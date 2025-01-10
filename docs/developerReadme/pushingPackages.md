@@ -27,19 +27,9 @@ or
 ```
 **8.** Upload using twine to testpypi
 ```bash
-python3 -m twine upload --repository testpypi dist/* --verbose
+twine upload --repository testpypi dist/* --verbose
 ```
 or to pypi
 ```bash
-python3 -m twine upload --repository pypi dist/* --verbose
-```
-
-***9.*** Upload only the metadata
-```bash
-python3 -m twine upload --skip-existing dist/* --verbose
-```
-
-or to pypi
-```bash
-python3 -m twine upload --skip-existing dist/* --verbose
+twine upload --repository pypi dist/* --verbose
 ```
