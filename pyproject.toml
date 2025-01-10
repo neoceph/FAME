@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "FAME-UD"
-version = "0.0.4"
+version = "0.0.5"
 description = "A framework for emulating additive manufacturing processes."
 authors = [
   { name="Abdullah_Al_Amin", email="nirjhor18@gmail.com" },
