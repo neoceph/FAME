@@ -17,7 +17,7 @@ To install FAME you need to have anaconda installed then clone the repository an
 ```bash
 git clone https://github.com/neoceph/FAME.git
 cd FAME
-conda env create -f environment.yaml
+conda env create -f environment_linux.yaml
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ To run a simulation, use the following command:
 ```bash
 fame --input your_config_file.yaml
 ```
-Replace `your_config_file.json` with your specific configuration file.
+Replace `your_config_file.yaml` with your specific configuration file.
 
 ## Configuration
 The configuration file should include parameters such as:
@@ -35,13 +35,58 @@ The configuration file should include parameters such as:
 - Material properties
 
 Example configuration:
-```json
-{
-    "laser_power": 200,
-    "scan_speed": 1000,
-    "layer_thickness": 0.03,
-    "material": "Ti-6Al-4V"
-}
+```yaml
+simulation:
+  domain:
+    size: 
+      x: [0, 0.5]
+    divisions:
+      x: [5]
+    area: 10e-3
+  
+  material:
+    name: "Aluminum"
+    properties:  # Ensure all properties are nested under "properties"
+      density:
+        baseValue: 2700
+        method: "constant"
+        referenceTemperature: 298.15
+      specificHeat:
+        baseValue: 900
+        method: "constant"
+        referenceTemperature: 298.15
+      thermalConductivity:
+        baseValue: 1000
+        method: "constant"
+        referenceTemperature: 298.15
+
+  boundaryConditions:
+    parameters:
+      temperature:
+        variableType: "scalar"
+        convectionCoefficient: 15
+        emmissivity: 0.85
+        ambientTemperature: 298
+    x:
+      0:  
+        - type: "temperature"
+          value: 100
+      0.5:
+        - type: "temperature"
+          value: 500
+
+  solver:
+    method: "bicgstab"
+    tolerance: 1e-8
+    maxIterations: 1000
+    preconditioner: "jacobi"
+
+  timeControl:
+    steadyState: true  # Indicates that this is a steady-state problem
+
+  visualization:
+    path: "./results"
+    variableName: "temperature_cell"
 ```
 
 ## Contributing
