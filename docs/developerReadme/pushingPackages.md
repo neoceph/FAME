@@ -1,7 +1,7 @@
 # How to publish to pypi as a developer.
 
 ### Linux ###
-**1.** Update the changelog.
+**1.** Update the changelog on CHANGELOG.md.
 
 **2.** Commit changes and create a git tag with appropriate version.
 
