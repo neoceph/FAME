@@ -52,4 +52,4 @@ autoclass_content = "both"
 # conf.py
 
 # Mock heavy or unnecessary imports
-autodoc_mock_imports = ["petsc4py", "jax"]
+autodoc_mock_imports = ["petsc4py", "petsc4py", "jax"]
