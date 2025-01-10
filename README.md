@@ -1,5 +1,5 @@
 ![Documentation Status](https://readthedocs.org/projects/fame-ud/badge/?version=latest)
-[![PyPI version](https://img.shields.io/badge/TestPyPI-0.1.0-blue)](https://test.pypi.org/project/FAME-UD/)
+[![PyPI version](https://img.shields.io/badge/TestPyPI-0.0.2-blue)](https://test.pypi.org/project/FAME-UD/)
 
 ## Development Instructions: [here](docs/developerReadme/development.md) &  Documentation: [here](https://fame-ud.readthedocs.io/en/latest/)
 

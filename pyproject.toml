@@ -9,7 +9,7 @@ description = "A framework for emulating additive manufacturing processes."
 authors = [
   { name="Abdullah_Al_Amin", email="nirjhor18@gmail.com" },
 ]
-readme = "README.md"
+readme = ["README.md", "CHANGELOG.md"]
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
