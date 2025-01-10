@@ -5,7 +5,11 @@
             "name": "Python: Debug main.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main.py",
+            "program": "${workspaceFolder}/fame/main.py",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
             "args": [
                 "--input",
                 "../examples/FVM/HeatDiffusion/setup_1D.yaml"

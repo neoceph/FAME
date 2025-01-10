@@ -1,0 +1,51 @@
+simulation:
+  domain:
+    size: 
+      x: [0, 0.5]
+    divisions:
+      x: [5]
+    area: 10e-3
+  
+  material:
+    name: "Aluminum"
+    properties:  # Ensure all properties are nested under "properties"
+      density:
+        baseValue: 2700
+        method: "constant"
+        referenceTemperature: 298.15
+      specificHeat:
+        baseValue: 900
+        method: "constant"
+        referenceTemperature: 298.15
+      thermalConductivity:
+        baseValue: 1000
+        method: "constant"
+        referenceTemperature: 298.15
+
+  boundaryConditions:
+    parameters:
+      temperature:
+        variableType: "scalar"
+        convectionCoefficient: 15
+        emmissivity: 0.85
+        ambientTemperature: 298
+    x:
+      0:  
+        - type: "temperature"
+          value: 100
+      0.5:
+        - type: "temperature"
+          value: 500
+
+  solver:
+    method: "bicgstab"
+    tolerance: 1e-8
+    maxIterations: 1000
+    preconditioner: "jacobi"
+
+  timeControl:
+    steadyState: true  # Indicates that this is a steady-state problem
+
+  visualization:
+    path: "./results"
+    variableName: "temperature_cell"

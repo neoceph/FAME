@@ -4,7 +4,7 @@ import sys
 import argparse
 
 # Adjust the import path to locate finiteVolumeMethod.py
-from FVM.finiteVolumeMethod import FVM
+from fame.FVM.finiteVolumeMethod import FVM
 
 def loadInput(file_path):
     if not os.path.exists(file_path):
