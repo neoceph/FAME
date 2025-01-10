@@ -17,6 +17,7 @@ fonttools==4.55.3
 h5py==3.12.1
 idna==3.10
 imagesize==1.4.1
+jax==0.4.38
 Jinja2==3.1.4
 kiwisolver==1.4.7
 lsprotocol==2023.0.1
@@ -34,6 +35,7 @@ Pygments==2.18.0
 pyparsing==3.2.0
 pyspellchecker==0.8.1
 python-dateutil==2.9.0.post0
+pyyaml==6.0.2
 requests==2.32.3
 scipy==1.14.1
 setuptools==75.1.0
