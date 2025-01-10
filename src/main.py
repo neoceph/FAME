@@ -4,7 +4,7 @@ import sys
 import argparse
 
 # Adjust the import path to locate finiteVolumeMethod.py
-from .FVM.finiteVolumeMethod import FVM
+from FVM.finiteVolumeMethod import FVM
 
 def loadInput(file_path):
     if not os.path.exists(file_path):
@@ -33,7 +33,7 @@ def main():
     
     # Instantiate and run the FVM simulation
     fvm_simulation = FVM(config)
-    fvm_simulation.run()
+    fvm_simulation.simulate()
 
 if __name__ == "__main__":
     main()

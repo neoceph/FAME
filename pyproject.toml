@@ -22,4 +22,7 @@ Homepage = "https://github.com/neoceph/FAME"
 Issues = "https://github.com/neoceph/FAME/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/FVM"]
+packages = ["src"]
+
+[project.scripts]
+fame = "main:main"
