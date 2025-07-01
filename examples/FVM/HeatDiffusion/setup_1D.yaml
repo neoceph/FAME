@@ -38,7 +38,8 @@ simulation:
           value: 500
 
   solver:
-    method: "bicgstab"
+    module: "petsc"
+    method: "gmres"
     tolerance: 1e-8
     maxIterations: 1000
     preconditioner: "jacobi"
