@@ -3,6 +3,8 @@ import os
 import yaml
 import numpy as np
 import scipy.sparse as sp
+import vtk
+from vtkmodules.util import numpy_support
 
 from fame.FVM.finiteVolumeMethod import FVM
 from fame.FVM.solver import Solver
@@ -153,6 +155,26 @@ class TestDiscretization1D(unittest.TestCase):
         # Verify output path
         output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
         self.assertTrue(os.path.exists(output_path), "Output path does not exist.")
+
+        # Find VTP file
+        vtp_files = [f for f in os.listdir(output_path) if f.endswith('.vtp')]
+        self.assertGreater(len(vtp_files), 0, "No VTP output files found.")
+        vtp_path = os.path.join(output_path, vtp_files[0])
+        
+        # Read temperature_cell from VTP
+        reader = vtk.vtkXMLPolyDataReader()
+        reader.SetFileName(vtp_path)
+        reader.Update()
+        polydata = reader.GetOutput()
+        cell_data = polydata.GetCellData()
+        temp_vtk_array = cell_data.GetArray("temperature_cell")
+        self.assertIsNotNone(temp_vtk_array, "temperature_cell array not found in VTP.")
+        temperature = numpy_support.vtk_to_numpy(temp_vtk_array)
+        
+        # Compare with expected (e.g., uniform 300 K)
+        expected_temperature = np.array([140, 220, 300, 380, 460])
+        np.testing.assert_allclose(temperature, expected_temperature, rtol=1, err_msg="Temperature field deviates more than 1 degree.")
+
         print("Full 1D simulation test passed.")
 
     def test_materialProperties(self):
