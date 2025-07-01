@@ -151,6 +151,9 @@ class Solver:
         }
         if method not in petscMethods:
             raise ValueError(f"Unsupported method '{method}' for petsc backend.")
+        
+        if not isinstance(self.A, sp.csr_matrix):
+            self.A = self.A.tocsr()
 
         mat = PETSc.Mat().createAIJ(size=self.A.shape, csr=(self.A.indptr, self.A.indices, self.A.data))
         vec_b = PETSc.Vec().createWithArray(self.b)
