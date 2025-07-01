@@ -103,7 +103,8 @@ class FVM:
         if not self.mesh:
             raise ValueError("Mesh must be generated before solving.")
         
-        self.solver = sol(self.mesh.A, self.mesh.b)
+        backend = self.config['simulation'].get('solver', {}).get('module')
+        self.solver = sol(self.mesh.A, self.mesh.b, backend=backend)
         solver_type = self.config['simulation'].get('solver', {}).get('method')
         tolerance = self.config['simulation'].get('solver', {}).get('tolerance')
         maxIterations = self.config['simulation'].get('solver', {}).get('maxIterations')
