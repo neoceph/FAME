@@ -161,7 +161,7 @@ class FVM1D(FVM):
         domain = self.config['simulation']['domain']
         bounds = tuple(domain['size']['x'])
         divisions = (domain['divisions']['x'])
-        self.mesh = StructuredMesh1D(bounds, divisions)
+        self.mesh = StructuredMesh1D(bounds, divisions, faceArea=domain.get('area', 1.0))
         print("1D Mesh initialized.")
 
     def visualizeResults(self):

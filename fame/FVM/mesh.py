@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 class StructuredMesh:
-    def __new__(cls, bounds, divisions):
+    def __new__(cls, bounds, divisions, **kwargs):
         """
         Dynamically instantiate the correct subclass based on the dimensionality.
         """
@@ -404,12 +404,12 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
 
 
 class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
-    def __init__(self, bounds, divisions):
+    def __init__(self, bounds, divisions, faceArea=1.0):
         vtk.vtkPolyData.__init__(self)
         super().__init__(bounds, divisions)
 
         # Define faceArea as a float variable specific to 1D mesh
-        self.faceArea = 1.0
+        self.faceArea = np.float64(faceArea)
 
     def GetNumberOfCells(self):
         return self.GetNumberOfLines()

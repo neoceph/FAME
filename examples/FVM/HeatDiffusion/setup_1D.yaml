@@ -4,7 +4,7 @@ simulation:
       x: [0, 0.5]
     divisions:
       x: [5]
-    area: 10e-3
+    area: 1
   
   material:
     name: "Aluminum"

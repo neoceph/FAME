@@ -173,7 +173,7 @@ class TestDiscretization1D(unittest.TestCase):
         
         # Compare with expected (e.g., uniform 300 K)
         expected_temperature = np.array([140, 220, 300, 380, 460])
-        np.testing.assert_allclose(temperature, expected_temperature, rtol=1, err_msg="Temperature field deviates more than 1 degree.")
+        np.testing.assert_allclose(temperature, expected_temperature, atol=1, err_msg="Temperature field deviates more than 1 degree.")
 
         print("Full 1D simulation test passed.")
 
