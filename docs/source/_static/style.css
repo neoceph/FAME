@@ -6,7 +6,14 @@ h2 {
     color: #CE1141;   /* Dark red for minor titles */
 }
 
+/* docs/source/_static/style.css */
+div.math {
+    position: relative;            /* create positioning context */
+}
 span.eqno {
-    float: right;      /* places the number on the right margin */
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);   /* center vertically */
     margin-left: 0.5em;
 }

@@ -61,7 +61,7 @@ Considering :math:`S_T \Delta V = S_u + S_i T_i` for a dependent source variable
 .. math::
     \Rightarrow \left[kA \frac{\partial T}{\partial x} \right]_{R} + \left[kA \frac{\partial T}{\partial x} \right]_{L} + S_u + S_i T_i = 0    
 
-Assuming the convention of fluxes moving out the cell as positive, we can express the above equation as:
+Assuming the convention of **fluxes moving out the cell as positive**, we can express the above equation as:
 
 .. math::
     \Rightarrow \left[kA \frac{T_{i+1} - T_i}{||x_{i+1} - x_{i}||^2} \right]_{R} + \left[kA \frac{T_{i-1} - T_i}{||x_{i} - x_{i-1}||^2} \right]_{L} + S_u + S_i T_i = 0    
@@ -75,38 +75,55 @@ or
 
 Here if needed
 
-- :math:`k|_{right}` can be approximated as the average of the thermal conductivities at the current and next cell, i.e., :math:`k_{i \leftrightarrow i+1} = \frac{k_i + k_{i+1}}{2}`.
-- :math:`k|_{left}` can be approximated as the average of the thermal conductivities at the current and previous cell, i.e., :math:`k_{i \leftrightarrow i-1} = \frac{k_i + k_{i-1}}{2}`.
-- If needed :math:`A|_{right}` can be approximated by considering the area of the face between the current cell :math:`ith` and the next cell :math:`(i+1)th`, i.e., :math:`A_{i, i+1}`.
+- :math:`k|_{i+1}` or :math:`k|_{i-1}` can be approximated as the average of the thermal conductivities at the current and next cell, i.e., :math:`k_{i+1} = \frac{k_i + k_{i+1}}{2}` and :math:`k_{i-1} = \frac{k_i + k_{i-1}}{2}`.
+- If needed :math:`A|_{i+1}` can be approximated by considering the area of the face between the current cell :math:`ith` and the next cell :math:`(i+1)th`, i.e., :math:`A_{i, i+1}`.
 
 From the above equation, we can rearrange the terms to form a system of equations suitable to be solved iteratively.:
 
 .. math::
-    :nowrap:
+    :label: eq:heatDiffusionDiscretizationRearranged
 
-    \begin{align}
+    \begin{align*}
     \Rightarrow\ 
     & \left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \right] T_{i-1} \\
     & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i \right] T_i \notag \\
     & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} + S_u = 0
-    \end{align}
+    \end{align*}
 
 Changing the sign of the equation, and for a general case where the source term is not zero (:math:`S_u = q \Delta V`), we can express the equation as:
 
 .. math::
-    :nowrap:
 
-    \begin{align}
+    \begin{align*}
     \Rightarrow\ 
     & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \right] T_{i-1} \\
     & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i \right] T_i \notag \\
     & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} = q \Delta V
-    \end{align}
+    \end{align*}
 
-The equation above is actually a linear system of equations that can be expressed in a matrix form.
+The equation above is actually a linear system of equations and in simplified form can be written as follows which can be expressed in a matrix form.
+
+.. math::
+    -a_{i, i-1} T_{i-1} + a_{i, i} T_i - a_{i, i+1} T_{i+1} = b_i
+
+and
 
 .. math::
     Ax = b 
+
+Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be defined as follows:
+
+.. math:: 
+    :label: eq:matrixCoefficients
+
+    \begin{align*}
+        a_{i, i-1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \\
+        a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \\
+        a_{i, i+1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \\
+        b_i &= q \Delta V = S_u
+    \end{align*}
+
+Where :math:`\Delta x_{i+1} = ||x_{i+1} - x_i||^2` `\Delta x_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two face centers.
 
 .. math::
     \begin{aligned}
