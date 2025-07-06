@@ -5,3 +5,8 @@ h1 {
 h2 {
     color: #CE1141;   /* Dark red for minor titles */
 }
+
+span.eqno {
+    float: right;      /* places the number on the right margin */
+    margin-left: 0.5em;
+}
