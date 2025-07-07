@@ -36,7 +36,7 @@ class Discretization:
                 raise ValueError("Material property must include 'thermalConductivity'")
             
             # off-diagonal matrix element construction
-            for sharedCellID, sharedFace in zip (self.mesh.sharedCells[cellID]['shared_cells'], self.mesh.sharedCells[cellID]['shared_faces']):
+            for sharedCellID, sharedFace in zip (self.mesh.sharedCells[cellID]['shared_cells'], self.mesh.sharedCells[cellID]['shared_faces']): # the assumption is that sharedCells and sharedFaces are lists of the same length as only one face is shared between two cells.
                 points = vtk.vtkPoints()
                 for point in self.mesh.faces[sharedFace]:
                     points.InsertNextPoint(self.mesh.GetPoint(point))
