@@ -68,10 +68,14 @@ Assuming the convention of **fluxes moving out the cell as positive**, we can ex
 
 or
 
+.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
-    :label: eq:heatDiffusionDiscretization
-    
+    :nowrap:
+
+    \begin{align}
     \Rightarrow \left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_u + S_i T_i = 0   
+    \label{eq:heatDiffusionDiscretization}
+    \end{align}
 
 Here if needed
 
@@ -80,19 +84,23 @@ Here if needed
 
 From the above equation, we can rearrange the terms to form a system of equations suitable to be solved iteratively.:
 
+.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
-    :label: eq:heatDiffusionDiscretizationRearranged
+   :nowrap:
 
-    \begin{align*}
-    \Rightarrow\ 
-    & \left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \right] T_{i-1} \\
-    & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i \right] T_i \notag \\
-    & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} + S_u = 0
-    \end{align*}
+   \begin{align}
+   \Rightarrow\ 
+   & \left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i-1} \right] T_{i-1} \notag \\
+   & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i,i-1} - S_i \right] T_i \notag \\
+   & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i+1} \right] T_{i+1} + S_u = 0 
+   \label{eq:heatDiffusionDiscretizationRearranged}
+   \end{align}
 
 Changing the sign of the equation, and for a general case where the source term is not zero (:math:`S_u = q \Delta V`), we can express the equation as:
 
+.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
+    :nowrap:
 
     \begin{align*}
     \Rightarrow\ 
@@ -113,17 +121,29 @@ and
 
 Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be defined as follows:
 
+
+.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math:: 
-    :label: eq:matrixCoefficients
+    :nowrap:
 
-    \begin{align*}
-        a_{i, i-1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \\
-        a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \\
-        a_{i, i+1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \\
+    \begin{align}
+        a_{i, i-1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \notag \\
+        a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \notag \\
+        a_{i, i+1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
         b_i &= q \Delta V = S_u
-    \end{align*}
+    \label{eq:matrixCoefficients}
+    \end{align}
 
-Where :math:`\Delta x_{i+1} = ||x_{i+1} - x_i||^2` `\Delta x_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two face centers.
+Where :math:`\left\{\Delta x\right\}_{i+1} = ||x_{i+1} - x_i||^2`, :math:`\left\{\Delta x\right\}_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two cell centers.
+
+Boundary Conditions
+---------------------
+
+In the case of boundary conditions, the discretization can be modified to account for the specific conditions at the boundaries. For example, if a Dirichlet boundary condition is applied at either the left/right boundary (i.e., fixed temperature), the equation will be modified.
+
+1. Dirichlet Boundary Condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`b` for a cell indexed with :math:`i`
 
 .. math::
     \begin{aligned}
