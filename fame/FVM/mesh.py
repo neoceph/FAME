@@ -33,6 +33,7 @@ class StructuredMesh:
         self.divisions = divisions
         # self.is_1D = len(divisions) == 1
 
+
         # Create vtkStructuredGrid or vtkPolyData depending on 1D or 3D mesh
         # self.mesh = vtk.vtkPolyData() if self.is_1D else vtk.vtkStructuredGrid()
 
@@ -46,6 +47,7 @@ class StructuredMesh:
 
         self.A = sp.lil_matrix((self.numCells, self.numCells))  # Use LIL format for construction
         self.b = np.zeros(self.numCells)
+
 
 
 class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):

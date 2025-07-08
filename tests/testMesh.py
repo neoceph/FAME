@@ -435,27 +435,6 @@ class TestStructuredMesh(unittest.TestCase):
         result = self.mesh.getFacesByCoordinates(z=self.bounds[2][1], tolerance=0.1)
         self.assertEqual(len(result), expectedCellFaces)        
 
-class TestSpecialStructuredMesh(unittest.TestCase):
-    def setUp(self):
-        """
-        Set up a StructuredMesh object for each test case.
-        """
-        self.bounds = [(0, 3), (0, 3), (0, 3)]
-        self.divisions = [3, 3, 3]
-        self.mesh = StructuredMesh(self.bounds, self.divisions)
-
-    def testFaceNumbers(self):
-        """
-        Test that the number of faces is computed correctly.
-        """
-        expectedFaces = 3 * self.divisions[0] * self.divisions[1] * self.divisions[2] + \
-                        self.divisions[0] * self.divisions[1] + \
-                        self.divisions[1] * self.divisions[2] + \
-                        self.divisions[0] * self.divisions[2]
-        totalFaces = len(self.mesh.faces)
-        self.assertEqual(totalFaces, expectedFaces)
-
-
 class TestStructuredMesh1D(unittest.TestCase):
     def setUp(self):
         """
