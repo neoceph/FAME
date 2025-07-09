@@ -5,7 +5,7 @@ simulation:
       y: [0, 1]
       z: [0, 1]
     divisions:
-      x: 100
+      x: 5
       y: 1
       z: 1
 
