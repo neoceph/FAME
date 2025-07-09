@@ -127,14 +127,23 @@ Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be d
     :nowrap:
 
     \begin{align}
-        a_{i, i-1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \notag \\
+        a_{i, i-1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \notag \\
         a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \notag \\
-        a_{i, i+1} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
+        a_{i, i+1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
         b_i &= q \Delta V = S_u
     \label{eq:matrixCoefficients}
     \end{align}
 
 Where :math:`\left\{\Delta x\right\}_{i+1} = ||x_{i+1} - x_i||^2`, :math:`\left\{\Delta x\right\}_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two cell centers.
+
+The above equations can be generalized for any arbitrary shape mesh cell in three dimensions, where the coefficients of the matrix :math:`A` and the vector :math:`b` are defined based on the connectivity of the cells and the properties of the material. A general assumption can be made that there are a total of :math:`n` cells and for a given cell indexed with :math:`i`, it can be connected to :math:`m_i` other cells indexed with :math:`j`. In such case, the coefficients can be defined as follows:
+
+.. math::
+    \begin{aligned}
+        a_{ij} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, j} \notag \\
+        a_{i, i} &= \left( \sum_{j=1}^{m_{i}} \left\{ \frac{kA}{\Delta x} \right\}_{i, j} - S_i\right) \notag \\
+        b_i &= q \Delta V
+    \end{aligned}
 
 Boundary Conditions
 ---------------------

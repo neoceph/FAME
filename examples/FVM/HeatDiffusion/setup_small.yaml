@@ -5,9 +5,9 @@ simulation:
       y: [0, 1]
       z: [0, 1]
     divisions:
-      x: 3
-      y: 3
-      z: 3
+      x: 100
+      y: 1
+      z: 1
 
   material:
     name: "Aluminum"
