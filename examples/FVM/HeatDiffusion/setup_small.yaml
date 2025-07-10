@@ -5,9 +5,9 @@ simulation:
       y: [0, 1]
       z: [0, 1]
     divisions:
-      x: 5
-      y: 1
-      z: 1
+      x: 10
+      y: 10
+      z: 10
 
   material:
     name: "Aluminum"
@@ -21,7 +21,7 @@ simulation:
         method: "constant"
         referenceTemperature: 298.15
       thermalConductivity:
-        baseValue: 100
+        baseValue: 10
         method: "constant"
         referenceTemperature: 298.15
 
@@ -29,7 +29,7 @@ simulation:
     parameters:
       temperature:
         variableType: "scalar"
-        convectionCoefficient: 15
+        convectionCoefficient: 0
         emmissivity: 0.85
         ambientTemperature: 298
     x:
