@@ -6,16 +6,16 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../src'))  # Path to your src folder
-
+sys.path.insert(0, os.path.abspath('../../fame'))  # Path to src folder
+sys.path.insert(0, os.path.abspath('../..'))  # Path to root
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'FAME'
-copyright = '2024, Abdullah Al Amin'
+copyright = '2024~2025, Abdullah Al Amin'
 author = 'Abdullah Al Amin'
-release = '2024.11'
+release = '2025.01'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -28,6 +28,14 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.cairosvgconverter',
 ]
+
+mathjax3_config = {
+    'tex': {
+        'tags': 'ams',  # or 'all'
+        'useLabelIds': True
+    }
+}
+
 
 # Image conversion
 # Specify the converter for handling .svg files
@@ -47,3 +55,9 @@ html_css_files = [
     'style.css',  # Specify your custom CSS file
 ]
 autoclass_content = "both"
+
+
+# conf.py
+
+# Mock heavy or unnecessary imports
+autodoc_mock_imports = ["petsc4py", "petsc4py", "jax"]

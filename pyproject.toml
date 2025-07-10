@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "FAME-UD"
-version = "0.0.1"
+version = "0.0.5"
 description = "A framework for emulating additive manufacturing processes."
 authors = [
   { name="Abdullah_Al_Amin", email="nirjhor18@gmail.com" },
@@ -22,4 +22,7 @@ Homepage = "https://github.com/neoceph/FAME"
 Issues = "https://github.com/neoceph/FAME/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/FVM"]
+packages = ["fame"]
+
+[project.scripts]
+fame = "fame.main:main"

@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import scipy.sparse as sp
 import os
-from src.FVM.solver import Solver
+from fame.FVM.solver import Solver
 
 class TestSolver(unittest.TestCase):
 

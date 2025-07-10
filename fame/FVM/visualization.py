@@ -1,9 +1,14 @@
 import os
 import vtk
 import numpy as np
-from .mesh import StructuredMesh
+from .mesh import StructuredMesh, StructuredMesh1D
 
 class MeshWriter:
+    def __new__(cls, mesh):
+        if isinstance(mesh, StructuredMesh1D):
+            return super().__new__(MeshWriter1D)
+        return super().__new__(MeshWriter3D)
+    
     def __init__(self, mesh):
         """
         Initialize with a StructuredMesh instance.
@@ -15,6 +20,11 @@ class MeshWriter:
             raise TypeError("The provided mesh must be an instance of StructuredMesh.")
         self.mesh = mesh
 
+
+class MeshWriter3D(MeshWriter):
+    """
+    Definition of 3D mesh writer.
+    """
     def _writeSingleVTS(self, output_file, variables):
         """
         Writes variables (scalar, vector, tensor) of the StructuredMesh to a .vts file.
@@ -107,3 +117,78 @@ class MeshWriter:
             f.writelines(lines)
 
         print(f"Updated PVD file: {pvd_file} with timestep {time} and file {vts_file}")
+
+
+class MeshWriter1D(MeshWriter):
+    def _writeSingleVTP(self, output_file, variables):
+        if not output_file.endswith('.vtp'):
+            output_file += '.vtp'
+
+        points = self.mesh.GetPoints()
+        num_points = points.GetNumberOfPoints()
+
+        if not points or num_points == 0:
+            raise ValueError("The provided mesh must have valid vtkPoints.")
+
+        for var_name, var_data in variables.items():
+            var_array = vtk.vtkDoubleArray()
+            var_array.SetName(var_name)
+
+            # Determine if data is for points or cells
+            if var_data.shape[0] == num_points:
+                target = self.mesh.GetPointData()
+            elif var_data.shape[0] == self.mesh.GetNumberOfCells():
+                target = self.mesh.GetCellData()
+            else:
+                raise ValueError(
+                    f"Mismatch between '{var_name}' size and mesh. "
+                    f"Expected {num_points} for points or {self.mesh.GetNumberOfCells()} for cells."
+                )
+
+            # Set components based on data shape (scalar, vector, tensor)
+            if var_data.ndim == 1:
+                var_array.SetNumberOfComponents(1)
+                for value in var_data:
+                    var_array.InsertNextValue(value)
+            else:
+                var_array.SetNumberOfComponents(var_data.shape[1])
+                for value in var_data:
+                    var_array.InsertNextTuple(value)
+
+            target.AddArray(var_array)
+
+        # Write the PolyData mesh to .vtp
+        writer = vtk.vtkXMLPolyDataWriter()
+        writer.SetFileName(output_file)
+        writer.SetInputData(self.mesh)
+        writer.Write()
+
+        print(f"PolyData mesh written to {output_file}")
+
+    def writeVTS(self, output_dir, variables, time=None, step=None):
+        os.makedirs(output_dir, exist_ok=True)
+        pvd_file = os.path.join(output_dir, os.path.basename(output_dir) + '.pvd')
+
+        # Create new PVD file if it doesn't exist
+        if not os.path.exists(pvd_file):
+            with open(pvd_file, 'w') as f:
+                f.write('<VTKFile type="Collection" version="0.1">\n')
+                f.write('  <Collection>\n')
+                f.write('  </Collection>\n')
+                f.write('</VTKFile>\n')
+
+        time = 0.0 if time is None else time
+        step = 0 if step is None else step
+
+        vtp_file = os.path.join(output_dir, f"output_{step:04d}.vtp")
+        self._writeSingleVTP(vtp_file, variables)
+
+        # Update the PVD file with the new VTP entry
+        with open(pvd_file, 'r+') as f:
+            lines = f.readlines()
+            insert_index = len(lines) - 2
+            lines.insert(insert_index, f'    <DataSet timestep="{time}" file="{os.path.basename(vtp_file)}"/>\n')
+            f.seek(0)
+            f.writelines(lines)
+
+        print(f"Updated PVD file: {pvd_file}")

@@ -11,7 +11,7 @@ build:
     python: "3.11"
   jobs:
     pre_build: # API doc generation before the documentation build
-      - sphinx-apidoc -o docs/source/ src
+      - sphinx-apidoc -o docs/source/ fame
     # nodejs: "20"
     # rust: "1.70"
     # golang: "1.20"

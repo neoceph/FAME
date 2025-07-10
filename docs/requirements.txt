@@ -34,6 +34,7 @@ Pygments==2.18.0
 pyparsing==3.2.0
 pyspellchecker==0.8.1
 python-dateutil==2.9.0.post0
+pyyaml==6.0.2
 requests==2.32.3
 scipy==1.14.1
 setuptools==75.1.0
