@@ -7,6 +7,7 @@ from .mesh import StructuredMesh, StructuredMesh1D
 from .property import MaterialProperty as prop
 from .solver import Solver as sol
 from .visualization import MeshWriter, MeshWriter1D
+from ..utils.utility import timing_decorator
 
 class FVM:
     def __new__(cls, config):
@@ -32,6 +33,7 @@ class FVM:
     def meshGeneration(self):
         raise NotImplementedError("meshGeneration must be implemented by subclass.")
 
+    @timing_decorator
     def applyBoundaryConditions(self):
         boundary_config = self.config['simulation'].get('boundaryConditions', {}).get('parameters', {})
         
@@ -61,6 +63,7 @@ class FVM:
 
         print("Boundary conditions applied.")
 
+    @timing_decorator
     def loadMaterialProperty(self):
         material_config = self.config.get('simulation', {}).get('material', {})
         self.materialProperties = {}
@@ -91,6 +94,7 @@ class FVM:
         self.materialProperties[material_name] = material_property
         print(f"Material properties successfully initialized for {material_name}.")
 
+    @timing_decorator
     def discretize(self):
         if not self.mesh:
             raise ValueError("Mesh must be generated before discretization.")
@@ -99,6 +103,7 @@ class FVM:
         self.discretization.discretizeHeatDiffusion()
         print("Discretization applied.")
     
+    @timing_decorator
     def solveEquations(self):
         if not self.mesh:
             raise ValueError("Mesh must be generated before solving.")
@@ -111,6 +116,7 @@ class FVM:
         self.solution = self.solver.solve(method=solver_type, preconditioner="none")
         print(f"Solver {solver_type} completed with tolerance {tolerance} and max iterations {maxIterations}.")
     
+    @timing_decorator
     def visualizeResults(self):
         if not self.solver or self.solver.solution is None:
             raise ValueError("Solution must exist before visualization.")
@@ -145,6 +151,7 @@ class FVM:
 
 
 class FVM3D(FVM):
+    @timing_decorator
     def meshGeneration(self):
         domain = self.config['simulation']['domain']
         bounds = (
@@ -157,13 +164,15 @@ class FVM3D(FVM):
         print("3D Mesh initialized.")
 
 class FVM1D(FVM):
+    @timing_decorator
     def meshGeneration(self):
         domain = self.config['simulation']['domain']
         bounds = tuple(domain['size']['x'])
         divisions = (domain['divisions']['x'])
-        self.mesh = StructuredMesh1D(bounds, divisions)
+        self.mesh = StructuredMesh1D(bounds, divisions, faceArea=domain.get('area', 1.0))
         print("1D Mesh initialized.")
 
+    @timing_decorator
     def visualizeResults(self):
         if not self.solver or self.solver.solution is None:
             raise ValueError("Solution must exist before visualization.")

@@ -1,11 +1,9 @@
 # Ignore dist directory
 dist/
 docs/build/
+results/
 
 # Ignore python cache files
 __pycache__/
 *.pyc
 *.pyo
-
-# Simulation output
-results/

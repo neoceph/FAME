@@ -29,6 +29,14 @@ extensions = [
     'sphinxcontrib.cairosvgconverter',
 ]
 
+mathjax3_config = {
+    'tex': {
+        'tags': 'ams',  # or 'all'
+        'useLabelIds': True
+    }
+}
+
+
 # Image conversion
 # Specify the converter for handling .svg files
 image_converter = 'cairosvg'

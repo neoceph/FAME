@@ -14,6 +14,36 @@
                 "--input",
                 "../examples/FVM/HeatDiffusion/setup_1D.yaml"
             ]
+        },
+        {
+            "name": "Python: Scalene Profile main.py",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scalene",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "${workspaceFolder}/fame/main.py",
+                "--input",
+                "../examples/FVM/HeatDiffusion/setup_1D.yaml"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Scalene Profile Unittests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scalene",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-m", "unittest", "discover", "-s", "tests"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "console": "integratedTerminal"
         }
     ]
 }

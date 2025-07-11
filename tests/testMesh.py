@@ -321,7 +321,7 @@ class TestStructuredMesh(unittest.TestCase):
         cell_id = self.divisions[0] * self.divisions[1] + self.divisions[0]  # Mid-cell locating after 1st X-Y layer plus 1st row in X and advancing 2 more cells.
         shared_cells_info = self.mesh.getSharedCellsInfo(cell_id)
         self.assertEqual(len(shared_cells_info["shared_faces"]), 5)
-
+    
     def testCenterCellSharedFaces(self):
         """
         Test that center cells have exactly 6 shared faces.

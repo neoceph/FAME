@@ -36,7 +36,7 @@ class Discretization:
                 raise ValueError("Material property must include 'thermalConductivity'")
             
             # off-diagonal matrix element construction
-            for sharedCellID, sharedFace in zip (self.mesh.sharedCells[cellID]['shared_cells'], self.mesh.sharedCells[cellID]['shared_faces']):
+            for sharedCellID, sharedFace in zip (self.mesh.sharedCells[cellID]['shared_cells'], self.mesh.sharedCells[cellID]['shared_faces']): # the assumption is that sharedCells and sharedFaces are lists of the same length as only one face is shared between two cells.
                 points = vtk.vtkPoints()
                 for point in self.mesh.faces[sharedFace]:
                     points.InsertNextPoint(self.mesh.GetPoint(point))
@@ -44,10 +44,10 @@ class Discretization:
                 faceArea = self.mesh.calculateArea(points)
                 cellDistance = np.linalg.norm(np.array(self.mesh.cellCenters[cellID]) - np.array(self.mesh.cellCenters[sharedCellID]))
 
-                self.mesh.A[cellID, sharedCellID] = thermalConductivity * (faceArea)/(cellDistance)
+                self.mesh.A[cellID, sharedCellID] = -thermalConductivity * (faceArea)/(cellDistance)
 
                 # diagonal marix element construction
-                self.mesh.A[cellID, cellID] += - thermalConductivity * (faceArea)/(cellDistance)
+                self.mesh.A[cellID, cellID] += thermalConductivity * (faceArea)/(cellDistance)
             
             # diagonal marix element construction for boundary faces
             for sharedBoundaryFace in self.mesh.sharedCells[cellID]['boundary_faces']:
@@ -56,9 +56,8 @@ class Discretization:
                     points.InsertNextPoint(self.mesh.GetPoint(point))
                 boundaryFaceArea = self.mesh.calculateArea(points)
                 distance_cell_to_boundary_face = np.linalg.norm(np.array(self.mesh.cellCenters[cellID]) - np.array(self.mesh.faceCenters[sharedBoundaryFace]))
-                self.mesh.A[cellID, cellID] += - thermalConductivity * (boundaryFaceArea)/(distance_cell_to_boundary_face) - self.boundaryCondition.convectionCoefficient
-                self.mesh.b[cellID] += -thermalConductivity * self.boundaryCondition.bcValues[sharedBoundaryFace, 0] * (boundaryFaceArea) / (distance_cell_to_boundary_face)    \
-                                        -self.boundaryCondition.convectionCoefficient * boundaryFaceArea * self.boundaryCondition.ambientTemperature
+                self.mesh.A[cellID, cellID] += thermalConductivity * (boundaryFaceArea)/(distance_cell_to_boundary_face) + self.boundaryCondition.convectionCoefficient
+                self.mesh.b[cellID] += thermalConductivity * self.boundaryCondition.bcValues[sharedBoundaryFace, 0] * (boundaryFaceArea) / (distance_cell_to_boundary_face)+self.boundaryCondition.convectionCoefficient * boundaryFaceArea * self.boundaryCondition.ambientTemperature
                 
             self.mesh.A[cellID, cellID] += -self.boundaryCondition.dependentSource[cellID, 0]
-            self.mesh.b[cellID] += -self.boundaryCondition.independentSource[cellID, 0] - self.boundaryCondition.volumetricSource[cellID, 0] * self.mesh.getCellVolume(cellID)
+            self.mesh.b[cellID] += self.boundaryCondition.independentSource[cellID, 0] + self.boundaryCondition.volumetricSource[cellID, 0] * self.mesh.getCellVolume(cellID)

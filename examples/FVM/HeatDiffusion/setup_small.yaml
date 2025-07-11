@@ -1,13 +1,13 @@
 simulation:
   domain:
     size: 
-      x: [0, 3]
-      y: [0, 3]
-      z: [0, 3]
+      x: [0, 1]
+      y: [0, 1]
+      z: [0, 1]
     divisions:
-      x: 3
-      y: 3
-      z: 3
+      x: 10
+      y: 10
+      z: 10
 
   material:
     name: "Aluminum"
@@ -21,7 +21,7 @@ simulation:
         method: "constant"
         referenceTemperature: 298.15
       thermalConductivity:
-        baseValue: 100
+        baseValue: 10
         method: "constant"
         referenceTemperature: 298.15
 
@@ -29,7 +29,7 @@ simulation:
     parameters:
       temperature:
         variableType: "scalar"
-        convectionCoefficient: 15
+        convectionCoefficient: 0
         emmissivity: 0.85
         ambientTemperature: 298
     x:
@@ -55,9 +55,10 @@ simulation:
           value: 500
 
   solver:
-    method: "bicgstab"
+    module: "petsc"
+    method: "gmres"
     tolerance: 1e-8
-    maxIterations: 1000
+    maxIterations: 10000
     preconditioner: "jacobi"
 
   timeControl:
