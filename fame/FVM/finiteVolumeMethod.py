@@ -29,6 +29,7 @@ class FVM:
         self.solver = None
         self.visualization = None
         self.output = None
+        self.nodalSolution = None
 
     def meshGeneration(self):
         raise NotImplementedError("meshGeneration must be implemented by subclass.")
@@ -104,6 +105,39 @@ class FVM:
         print("Discretization applied.")
     
     @timing_decorator
+    def interpolateNodeFromCell(self):
+        """
+        Interpolate the cell‐centered solution onto the mesh nodes
+        by averaging all adjacent cell values at each mesh point,
+        then let subclasses overwrite Dirichlet BCs in-place.
+        """
+        # --- prepare in-place storage ---
+        num_pts = self.mesh.GetNumberOfPoints()
+        # reuse or (re)allocate the nodalSolution array
+        self.nodalSolution = np.zeros(num_pts, dtype=float)
+        counts = np.zeros(num_pts, dtype=int)
+
+        # --- accumulate cell contributions ---
+        cell_vals = self.solution[0]
+        for cid in range(self.mesh.GetNumberOfCells()):
+            v = cell_vals[cid]
+            pts_ids = self.mesh.GetCell(cid).GetPointIds()
+            for i in range(pts_ids.GetNumberOfIds()):
+                pid = pts_ids.GetId(i)
+                self.nodalSolution[pid] += v
+                counts[pid] += 1
+
+        # --- normalize to get averages ---
+        counts[counts == 0] = 1
+        # in-place division
+        self.nodalSolution /= counts
+
+        # --- apply any Dirichlet BCs in-place ---
+        self._apply_nodal_bc(self.nodalSolution)
+
+        return self.nodalSolution
+    
+    @timing_decorator
     def solveEquations(self):
         if not self.mesh:
             raise ValueError("Mesh must be generated before solving.")
@@ -114,7 +148,7 @@ class FVM:
         tolerance = self.config['simulation'].get('solver', {}).get('tolerance')
         maxIterations = self.config['simulation'].get('solver', {}).get('maxIterations')
         self.solution = self.solver.solve(method=solver_type, preconditioner="none")
-        print(f"Solver {solver_type} completed with tolerance {tolerance} and max iterations {maxIterations}.")
+        print(f"Solver {solver_type} completed with tolerance {tolerance} and max iterations {maxIterations}.")        
     
     @timing_decorator
     def visualizeResults(self):
@@ -125,12 +159,14 @@ class FVM:
         self.visualization = MeshWriter(self.mesh)
 
         # Read variable name from YAML or default to 'temperature_cell'
-        variable_name = self.config['simulation'].get('visualization', {}).get('variableName', 'temperature_cell')
+        variable_name = self.config['simulation'].get('visualization', {}).get('variableName', 'temperature') + "_cell"
+        nodal_variable_name = self.config['simulation'].get('visualization', {}).get('nodalVariableName', 'temperature') + "_node"
 
         # Prepare the solution as a cell variable dictionary
         solution, err, info = self.solution
         variables = {
-            variable_name: solution
+            variable_name: solution,
+            nodal_variable_name: self.interpolateNodeFromCell()
         }
         
         # Read the output path from YAML or default to current directory
@@ -162,6 +198,54 @@ class FVM3D(FVM):
         divisions = (domain['divisions']['x'], domain['divisions']['y'], domain['divisions']['z'])
         self.mesh = StructuredMesh(bounds, divisions)
         print("3D Mesh initialized.")
+
+    def _apply_nodal_bc(self, nodalSolution: np.ndarray):
+        """
+        Overwrite in-place any Dirichlet “temperature” BCs on the mesh nodes
+        whose physical x,y or z coordinate matches the BC coordinate.
+        """
+        bc_conf = self.config['simulation'].get('boundaryConditions', {})
+        tol = self.config['simulation'].get('boundaryConditions', {})\
+                    .get('parameters', {})\
+                    .get('tolerance', 1e-6)
+
+        n_pts = self.mesh.GetNumberOfPoints()
+        pts   = self.mesh.GetPoints()
+
+        for axis, axis_cfg in bc_conf.items():
+            if axis == 'parameters':
+                continue
+
+            for coord_key, bc_list in axis_cfg.items():
+                # coord_key is the physical location (e.g. 0.0 or 1.0)
+                coord = float(coord_key)
+
+                # gather all pids on this plane
+                if axis == 'x':
+                    match_pids = [
+                        pid for pid in range(n_pts)
+                        if abs(pts.GetPoint(pid)[0] - coord) <= tol
+                    ]
+                elif axis == 'y':
+                    match_pids = [
+                        pid for pid in range(n_pts)
+                        if abs(pts.GetPoint(pid)[1] - coord) <= tol
+                    ]
+                elif axis == 'z':
+                    match_pids = [
+                        pid for pid in range(n_pts)
+                        if abs(pts.GetPoint(pid)[2] - coord) <= tol
+                    ]
+                else:
+                    continue
+
+                # apply all BCs on that plane
+                for bc in (bc_list if isinstance(bc_list, list) else [bc_list]):
+                    if bc.get('type') != 'temperature':
+                        continue
+                    T = float(bc['value'])
+                    for pid in match_pids:
+                        nodalSolution[pid] = T
 
 class FVM1D(FVM):
     @timing_decorator
@@ -195,3 +279,32 @@ class FVM1D(FVM):
         # Write the VTS file
         self.visualization.writeVTS(output_path, variables)
         print(f"Visualization generated and saved at {output_path} with variable '{variable_name}'.")
+
+    def _apply_nodal_bc(self, nodalSolution: np.ndarray):
+        """
+        Overwrite in-place any Dirichlet “temperature” BCs on the 1D mesh
+        nodes whose x-coordinate matches the BC coordinate.
+        """
+        bc_conf = self.config['simulation'].get('boundaryConditions', {})
+        tol = self.config['simulation'].get('boundaryConditions', {})\
+                    .get('parameters', {})\
+                    .get('tolerance', 1e-6)
+
+        n_pts = self.mesh.GetDimensions()  # returns int
+        pts   = self.mesh.GetPoints()
+
+        # pick any axis key (only 'x' makes sense in 1D)
+        axis_cfg = bc_conf.get('x', {})
+        for coord_key, bc_list in axis_cfg.items():
+            coord = float(coord_key)
+            match_pids = [
+                pid for pid in range(n_pts)
+                if abs(pts.GetPoint(pid)[0] - coord) <= tol
+            ]
+
+            for bc in (bc_list if isinstance(bc_list, list) else [bc_list]):
+                if bc.get('type') != 'temperature':
+                    continue
+                T = float(bc['value'])
+                for pid in match_pids:
+                    nodalSolution[pid] = T
