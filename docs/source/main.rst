@@ -1,7 +1,7 @@
 main module
 ===========
 
-.. automodule:: main
+.. automodule:: fame.main
    :members:
    :undoc-members:
    :show-inheritance:

@@ -5,65 +5,65 @@ Submodules
 ----------
 
 FVM.boundaryCondition module
-----------------------------
+----------------------------------
 
-.. automodule:: FVM.boundaryCondition
+.. automodule:: fame.FVM.boundaryCondition
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.discretization module
--------------------------
+-------------------------------
 
-.. automodule:: FVM.discretization
+.. automodule:: fame.FVM.discretization
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.finiteVolumeMethod module
------------------------------
+-----------------------------------
 
-.. automodule:: FVM.finiteVolumeMethod
+.. automodule:: fame.FVM.finiteVolumeMethod
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.mesh module
----------------
+---------------------
 
-.. automodule:: FVM.mesh
+.. automodule:: fame.FVM.mesh
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.physics module
-------------------
+------------------------
 
-.. automodule:: FVM.physics
+.. automodule:: fame.FVM.physics
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.property module
--------------------
+-------------------------
 
-.. automodule:: FVM.property
+.. automodule:: fame.FVM.property
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.solver module
------------------
+-----------------------
 
-.. automodule:: FVM.solver
+.. automodule:: fame.FVM.solver
    :members:
    :undoc-members:
    :show-inheritance:
 
 FVM.visualization module
-------------------------
+------------------------------
 
-.. automodule:: FVM.visualization
+.. automodule:: fame.FVM.visualization
    :members:
    :undoc-members:
    :show-inheritance:
@@ -71,7 +71,7 @@ FVM.visualization module
 Module contents
 ---------------
 
-.. automodule:: FVM
+.. automodule:: fame.FVM
    :members:
    :undoc-members:
    :show-inheritance:

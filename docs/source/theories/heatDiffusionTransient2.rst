@@ -72,7 +72,6 @@ Thus the equation can be re-written as:
 
     \begin{align*}
         \int_{t}^{t+\Delta t} \int_{\Delta V} \rho c \frac{\partial T}{\partial t} dV dt = \int_{t}^{t+\Delta t} \int_{\Delta V} \left[\frac{\partial}{\partial x}\left(k \frac{\partial T}{\partial x}\right) + S_T\right] dV dt \\
-
         \rho c (T_{i}-T_{i}^{0}) \Delta V = \int_{t}^{t+\Delta t} \left( \left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_u + S_i T_i \right) dt
     \end{align*}
 
