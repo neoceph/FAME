@@ -90,7 +90,7 @@ Rearrenging them to organize all the unknowns on the left side and knowns on the
         & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
         & = (1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i \right\}\right] T_{i}^{0} \notag \\
-        & (1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
     \end{align}
 
 
@@ -108,7 +108,7 @@ For :math:`\theta = 0`, the equation simplifies to an explicit form as follows
         & \left[ \frac {\rho c \Delta V}{\Delta t} \right] T_{i} \notag \\
         & = \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i\right\} \right] T_{i}^{0} \notag \\
-        & \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
+        & +\left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
     \end{align}
 
 For :math:`\theta = 1`, the equation simplifies to an implicit form as follows
