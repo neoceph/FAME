@@ -6,7 +6,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../fame'))  # Path to src folder
+# sys.path.insert(0, os.path.abspath('../../fame'))  # Path to src folder
 sys.path.insert(0, os.path.abspath('../..'))  # Path to root
 
 # -- Project information -----------------------------------------------------

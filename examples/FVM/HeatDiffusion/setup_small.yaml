@@ -66,4 +66,4 @@ simulation:
 
   visualization:
     path: "./results"
-    variableName: "temperature_cell"
+    variableName: "temperature"
