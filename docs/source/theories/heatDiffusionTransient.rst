@@ -22,248 +22,315 @@ where:
   - :math:`c_p` is the specific heat capacity.
 - :math:`S_T` is a source term.
 
-In steady-state conditions, the time-dependent term vanishes:
-
-.. math::
-
-    \frac{\partial}{\partial x_i}(k \frac{\partial T}{\partial x_i}) + S_T = 0
-
 Discretization in 3D
 --------------------
 
-The objective is to follow a generic discretization scheme for the heat diffusion equation in three dimensions, which can be applied to any arbitrary shape mesh cell. Ultimately, the goal is to generalize the transient cases as well allowing the formation of a sparse matrix system of equations for solution using iterative solvers.
-
-Considering a control volume :math:`\Delta V` with a surface area :math:`A` and a normal vector :math:`\mathbf{n}`. The integral form of the heat diffusion equation over the control volume can be expressed as:
+Continuing from the steady state case 
 
 .. image:: ../media/images/FVM/discretization_1D.svg
    :alt: Example SVG
    :scale: 50%
    :align: center
 
-Integrating the heat diffusion equation over the control volume, we can express it as:
+The equation now have the time derivative term which can be integrated over a time step :math:`\Delta t` to yield the following integral form:
+
 
 .. math::
-
-    \int_{\Delta V} \left[\frac{\partial}{\partial x}\left(k \frac{\partial T}{\partial x}\right) + S_T\right] dV = 0
-
-Following the Gauss-divergence theorem and hence finite volume method, we can re-write the integral form of the heat diffusion equation over the control volume as:
-
-.. math::
-    \Rightarrow \int_A \left[k \frac{\partial T}{\partial x} \right] \cdot \mathbf{n} \ dA + S_T \Delta V = 0
-
-Considering the i-th cell in the mesh, we can express the above equation as:
-
-.. math::
-    \Rightarrow \left[kA \frac{\partial T}{\partial x} \right]_{right} + \left[kA \frac{\partial T}{\partial x} \right]_{left} + S_T \Delta V = 0    
-
-Considering :math:`S_T \Delta V = S_u + S_i T_i` for a dependent source variable
-
-.. math::
-    \Rightarrow \left[kA \frac{\partial T}{\partial x} \right]_{R} + \left[kA \frac{\partial T}{\partial x} \right]_{L} + S_u + S_i T_i = 0    
-
-Assuming the convention of **fluxes moving out the cell as positive**, we can express the above equation as:
-
-.. math::
-    \Rightarrow \left[kA \frac{T_{i+1} - T_i}{||x_{i+1} - x_{i}||^2} \right]_{R} + \left[kA \frac{T_{i-1} - T_i}{||x_{i} - x_{i-1}||^2} \right]_{L} + S_u + S_i T_i = 0    
-
-or
-
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
-.. math::
+    :label: eq:heatDiffusionDiscretization-transient
     :nowrap:
 
     \begin{align}
-    \Rightarrow \left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_u + S_i T_i = 0   
-    \label{eq:heatDiffusionDiscretization}
+    \int_{t}^{t+\Delta t} \int_{\Delta V} \rho c \frac{\partial T}{\partial t} dV dt & = \int_{t}^{t+\Delta t} \int_{\Delta V} \left[\frac{\partial}{\partial x}\left(k \frac{\partial T}{\partial x}\right) + S_T\right] dV dt \notag \\
+    \rho c (T_{i}-T_{i}^{0}) \Delta V & = \int_{t}^{t+\Delta t} \left( \left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} \right. \notag \\
+    & \left. + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_u + S_i T_i \right)\ dt
     \end{align}
 
-Here if needed
+On the temperature integral of the right side of the equation,we can generalize the equation by means of a weighting parameter :math:`\theta` which can be used to approximate the temperature at the next time step as follows:
 
-- :math:`k|_{i+1}` or :math:`k|_{i-1}` can be approximated as the average of the thermal conductivities at the current and next cell, i.e., :math:`k_{i+1} = \frac{k_i + k_{i+1}}{2}` and :math:`k_{i-1} = \frac{k_i + k_{i-1}}{2}`.
-- If needed :math:`A|_{i+1}` can be approximated by considering the area of the face between the current cell :math:`ith` and the next cell :math:`(i+1)th`, i.e., :math:`A_{i, i+1}`.
-
-From the above equation, we can rearrange the terms to form a system of equations suitable to be solved iteratively.:
-
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
-.. math::
-   :nowrap:
-
-   \begin{align}
-   \Rightarrow\ 
-   & \left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i-1} \right] T_{i-1} \notag \\
-   & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i,i-1} - S_i \right] T_i \notag \\
-   & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i,i+1} \right] T_{i+1} + S_u = 0 
-   \label{eq:heatDiffusionDiscretizationRearranged}
-   \end{align}
-
-Changing the sign of the equation, and for a general case where the source term is not zero (:math:`S_u = q \Delta V`), we can express the equation as:
-
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
     :nowrap:
 
     \begin{align*}
-    \Rightarrow\ 
-    & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \right] T_{i-1} \\
-    & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i \right] T_i \notag \\
-    & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} = q \Delta V
+        T_{i}^{n+1} = T_{i}^{n} + \theta \left( T_{i}^{n+1} - T_{i}^{n} \right)
     \end{align*}
 
-The equation above is actually a linear system of equations and in simplified form can be written as follows which can be expressed in a matrix form.
+where :math:`\theta` is a weighting factor that can be set to 0 for implicit, 0.5 for the Crank-Nicolson method or 1 for the explicit method.
+
+Dropping the superscript for the future time step and using :math:`n = 0` for the current time step, we can express the equation as:
 
 .. math::
-    -a_{i, i-1} T_{i-1} + a_{i, i} T_i - a_{i, i+1} T_{i+1} = b_i
+    :nowrap:
 
-and
+    \begin{align*}
+        T_{i} & = T_{i}^{0} + \theta \left( T_{i} - T_{i}^{0} \right) \\
+        T_{i} & = \theta T_{i} + (1-\theta) T_{i}^{0} \\
+        \int_{t}^{t+\Delta t} T_{i} dt & = \left[ \theta T_{i} + (1-\theta) T_{i}^{0} \right] \Delta t
+    \end{align*}
+
+Thus the equation :eq:`eq:heatDiffusionDiscretization-transient` can be re-written as:
 
 .. math::
-    Ax = b 
-
-Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be defined as follows:
-
-
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
-.. math:: 
+    :label: eq:heatDiffusionDiscretized-transient-initial
     :nowrap:
 
     \begin{align}
-        a_{i, i-1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \notag \\
-        a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \notag \\
-        a_{i, i+1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
-        b_i &= q \Delta V = S_u
-    \label{eq:matrixCoefficients}
+        \rho c (T_{i}-T_{i}^{0}) \Delta V & = \theta\left(\left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_i T_{i}\right) \Delta t \notag \\
+        + (1-\theta) & \left(\left[kA \frac{T_{i+1}^{0} - T_i^{0}}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1}^{0} - T_i^{0}}{\Delta x} \right]_{i-1} + S_i T_{i}^{0} \right) \Delta t \notag \\
+        & + S_u \Delta V \Delta t \notag \\
+        \Rightarrow \rho c (T_{i}-T_{i}^{0}) \frac{\Delta V}{\Delta t} & = \theta\left(\left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1} - T_i}{\Delta x} \right]_{i-1} + S_i T_{i}\right) \notag \\
+        + (1-\theta) & \left(\left[kA \frac{T_{i+1}^{0} - T_i^{0}}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{i-1}^{0} - T_i^{0}}{\Delta x} \right]_{i-1} + S_i T_{i}^{0} \right) \notag \\
+        & + S_u \Delta V
     \end{align}
 
-Where :math:`\left\{\Delta x\right\}_{i+1} = ||x_{i+1} - x_i||^2`, :math:`\left\{\Delta x\right\}_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two cell centers.
-
-The above equations can be generalized for any arbitrary shape mesh cell in three dimensions, where the coefficients of the matrix :math:`A` and the vector :math:`b` are defined based on the connectivity of the cells and the properties of the material. A general assumption can be made that there are a total of :math:`n` cells and for a given cell indexed with :math:`i`, it can be connected to :math:`m_i` other cells indexed with :math:`j`. In such case, the coefficients can be defined as follows:
+Rearrenging them to organize all the unknowns on the left side and knowns on the right side, we can express the equation as:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, j} \notag \\
-        a_{i, i} &= \left( \sum_{j=1}^{m_{i}} \left\{ \frac{kA}{\Delta x} \right\}_{i, j} - S_i\right) \notag \\
-        b_i &= q \Delta V
-    \end{aligned}
+    :label: eq:genericTransientDiffusionDiscretization
+    :nowrap:
 
-Boundary Conditions
----------------------
+    \begin{align}
+        & - \theta \left[ \frac{kA}{\Delta x} \right]_{i-1} T_{i-1} \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i \right\} \right] T_{i} \notag \\
+        & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = (1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i \right\}\right] T_{i}^{0} \notag \\
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
+    \end{align}
 
-In the case of boundary conditions, the discretization can be modified to account for the specific conditions at the boundaries. For example, if a Dirichlet boundary condition is applied at either the left/right boundary (i.e., fixed temperature), the equation will be modified.
+
+This is the generic discretization equation for the transient heat diffusion equation using the finite volume method. The equation can be applied to any arbitrary shape mesh cell by appropriately defining the coefficients based on the geometry, cell connectivity, boundary faces, and material properties of the mesh cell.
+
+If :math:`\theta = 0`, the equation becomes explicit, meaning that the temperature at the next time step is calculated directly from the current temperature and source terms. If :math:`\theta = 1`, it becomes implicit, requiring a system of equations to be solved at each time step. For :math:`\theta = 0.5`, it represents the Crank-Nicolson method, which is a time-centered scheme providing a balance between stability and accuracy. The equation is organized such that all the unknowns (temperatures at the next time step) are on the left side, while all known values (temperatures at the current time step and source terms) are on the right side.
+
+For :math:`\theta = 0`, the equation simplifies to an explicit form as follows
+
+.. math::
+    :label: eq:genericTransientDiffusionDiscretization-explicit
+    :nowrap:
+
+    \begin{align}
+        & \left[ \frac {\rho c \Delta V}{\Delta t} \right] T_{i} \notag \\
+        & = \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i\right\} \right] T_{i}^{0} \notag \\
+        & +\left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} + S_u \Delta V
+    \end{align}
+
+For :math:`\theta = 1`, the equation simplifies to an implicit form as follows
+
+.. math::
+    :label: eq:genericTransientDiffusionDiscretization-implicit
+    :nowrap:
+
+    \begin{align}
+        & - \left[ \frac{kA}{\Delta x} \right] T_{i-1} \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i \right\} \right] T_{i} \notag \\
+        & -\left[ \frac{kA}{\Delta x} \right] T_{i+1} \notag \\
+        & = \left[ \frac {\rho c \Delta V}{\Delta t} \right] T_{i}^{0} \notag \\
+        & + S_u \Delta V
+    \end{align}
+
+For :math:`\theta = \frac{1}{2}`, the equation translates into a Crank-Nicolson form.
+
+Most interestingly, the equation :eq:`eq:genericTransientDiffusionDiscretization` can be used to derive the steady state heat diffusion equation by setting :math:`\Delta t \to \infty` and :math:`\theta = 1` , which leads to the steady state form of the heat diffusion equation.
+
+.. math::
+    :label: eq:genericSteadyDiffusionDiscretization
+    :nowrap:
+
+    \begin{align}
+        & - \left[ \frac{kA}{\Delta x} \right]_{i-1} T_{i-1} \notag \\
+        & + \left[ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{i-1} -S_i \right] T_{i} \notag \\
+        & -\left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = S_u \Delta V
+    \end{align}
+
+Boundary conditions
+-------------------
+
+Considering the equation :eq:`eq:heatDiffusionDiscretized-transient-initial`, we can estimate the discretization for the different types of boundary conditions.
 
 1. Dirichlet Boundary Condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`b` for a cell indexed with :math:`i`
+
+For a Dirichlet boundary condition, the temperature at the boundary is specified. For example, if the temperature at the boundary is fixed at :math:`T_B`, then :eq:`eq:heatDiffusionDiscretized-transient-initial` becomes:
+
+.. math:: 
+    :nowrap:
+
+    \begin{align*}
+    \rho c (T_{i}-T_{i}^{0}) \frac{\Delta V}{\Delta t} & = \theta\left(\left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{B} - T_i}{\Delta x} \right]_{B} + S_i T_{i}\right) \notag \\
+            + (1-\theta) & \left(\left[kA \frac{T_{i+1}^{0} - T_i^{0}}{\Delta x} \right]_{i+1} + \left[kA \frac{T_{B}^{0} - T_i^{0}}{\Delta x} \right]_{B} + S_i T_{i}^{0} \right) \notag \\
+            & + S_u \Delta V
+    \end{align*}
+
+Rearrenging the equation to organize all the unknowns on the left side and knowns on the right side similar to :eq:`eq:genericTransientDiffusionDiscretization`, we can express the equation as:
 
 .. math::
-    \begin{aligned}
-        & \left[kA \frac{T_{i+1}-T_i}{||x_{i+1} - x_i||^2} \right ] - \left[kA \frac{T_{i}-T_{i-1}}{||x_i-x_{i-1}||^2} \right] + S_u + S_i T_i & = 0 \\
-        \Rightarrow & \left[ \frac{kA_{right}}{||x_{i+1} - x_i||^2} \right]T_{i+1} + \left[-\frac{kA_{left}}{||x_{i} - x_{i-1}||^2} -\frac{kA_{right}}{||x_{i+1} - x_i||^2} + S_i \right]T_{i} \\
-            & \hspace{6.25 cm} + \left[ \frac{kA_{left}}{||x_{i} - x_{i-1}||^2} \right]T_{i-1} & = -S_u \\
-        \Rightarrow & \sum_{j=1}^n\left[ \frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2} \right]T_{j} -\sum_{j=1}^n\left[\left(\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right) + S_i  \right]T_{i} & = -S_u \\    
-    \end{aligned}
+    :nowrap:
 
-Here considering a list of shared cells are :math:`\mathcal{J}` for a given cell :math:`i` and :math:`j` is the index of the shared cells.
+    \begin{align}
+        & - \theta \left[ 0 \right]_B T_{i-1} \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_B -S_i \right\} \right] T_{i} \notag \\
+        & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = (1-\theta) \left[ 0 \right]_B T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
+        & + S_u \Delta V + \theta \left[ \frac{k A T_B }{\Delta x} \right]_B + (1-\theta) \left[ \frac{k A T_B^0 }{\Delta x} \right]_B \notag
+    \end{align}
 
-.. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] - S_i \\
-        b_{i} &= -[S_u]_{i} \\
-    \end{aligned}
-
-Boundary Conditions
----------------------
-
-The elements of the sparse matrix changes slightly when boundary conditions are handled.
-
-1. Dirichlet Boundary Condition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`b` for a cell indexed with :math:`i`
+Since the temperature at the boundary is fixed and known, meaning :math:`T_B = T_B^0`, we can express the equation as:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2}\right] - S_i \quad \forall b \in \mathcal{J, B} \\
-        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
-    \end{aligned}
+    :nowrap:
 
+    \begin{align}
+        & - \theta \left[ 0 \right]_B T_{i-1} \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_B -S_i \right\} \right] T_{i} \notag \\
+        & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = (1-\theta) \left[ 0 \right]_B T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
+        & + S_u \Delta V + \theta \left[ \frac{k A T_B^0 }{\Delta x} \right]_B + (1-\theta) \left[ \frac{k A T_B^0 }{\Delta x} \right]_B \notag
+    \end{align}
+
+Therefore the coefficients with the term :math:`\theta` cancels out, and the equation simplifies to:
+
+.. math::
+    :label: eq:genericTransientDiffusionDiscretization-dirichlet
+    :nowrap:
+
+    \begin{align}
+        & - 0 \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_B -S_i \right\} \right] T_{i} \notag \\
+        & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = 0\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
+        & + S_i^u \Delta V + \left[ \frac{k A T_B^0 }{\Delta x} \right]_B 
+    \end{align}
 
 2. Neumann Boundary Condition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If a boundary surface is kept at :math:`T_\infty` with a convective coefficient :math:`h`, the equation becomes:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The flux at the boundary is specified for the Neumann boundary condition, which can be expressed as:
+
+#. Thermal Insulation :math:`\frac {\partial T}{\partial x} = 0` 
+#. a convective heat transfer with coefficient :math:`h` and ambient temperature :math:`T_\infty` as :math:`\frac {\partial T}{\partial x} = hA(T_\infty - T_B)`, 
+#. a radiative heat loss with emissivity :math:`\epsilon`, Stefan Boltzmann constant :math:`\epsilon`, and ambient temperature :math:`T_\infty` as :math:`\frac {\partial T}{\partial x} = \sigma \epsilon A(T_\infty^4 - T_B^4)`. 
+
+We can consider the temperature of the boundary node and the cell almost equal as a mean to simplify where :math:`T_B = T_i`. In an attempt to develop a generic boundary condition that covers all three of the cases, we can add all of them together and replace the flux at the boundary. Then the equation :eq:`eq:heatDiffusionDiscretized-transient-initial` becomes:
+
+.. math:: 
+    :nowrap:
+
+    \begin{align*}
+    \rho c (T_{i}-T_{i}^{0}) \frac{\Delta V}{\Delta t} & = \theta\left(\left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} \notag \right. \\
+    & \left. + \left[0 + hA(T_B-T_\infty) + \sigma \epsilon A(T_B^4 - T_\infty^4) \right]_{B} + S_i T_{i} \vphantom{\frac{\Delta V}{\Delta t}}\right) \notag \\
+    + (1-\theta) & \left(\left[kA \frac{T^{0}_{i+1} - T^{0}_i}{\Delta x} \right]_{i+1} \notag \right. \\
+    & \left. + \left[0 + hA(T_\infty - T_B) + \sigma \epsilon A(T_\infty^4 - T_B^4) \right]_{B} + S_i T_{i} \vphantom{\frac{\Delta V}{\Delta t}}\right) \notag \\
+    & + S_u \Delta V
+    \end{align*}
+
+Rearrenging the equation to organize all the unknowns on the left side and knowns on the right side similar to :eq:`eq:genericTransientDiffusionDiscretization` where the known boundary values having the coefficient :math:`\theta` cancels out and thus, we can express the equation as:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}A_{i \leftrightarrow b}\left[\frac{k_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} + h \right] - S_i \quad \forall b \in \mathcal{J, B} \\
-        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b - hA_{i \leftrightarrow b} \cdot T_{\infty}, \quad \forall k \in \mathcal{B} \\
-    \end{aligned}
+    :label: eq:genericTransientDiffusionDiscretization-neumann
+    :nowrap:
 
-If a boundary is kept at a fixed temperature :math:`T_s` then :math:`T_b = T_b`, but if the surface is allowed to convect :math:`T_b=0`.
+    \begin{align}
+        & -0 + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \left( \frac{kA}{\Delta x} \right)_{i+1} -S_i \right\} \right] T_{i} \notag \\
+        & -\theta \left[ \frac{kA}{\Delta x} \right]_{i+1} T_{i+1} \notag \\
+        & = 0 + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} -S_i \right\}\right] T_{i}^{0} \notag \\
+        & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
+        & + S_i^u \Delta V + \left[ hA(T_\infty - T_B) + \sigma \epsilon A(T_\infty^4 - T_B^4) \right]_{B}
+    \end{align}
 
-Generalization
-----------------
+Generic Discretization for any dimensions
+------------------------------------------
 
-The following equations are the general form of heat diffusion equation. Notice :math:`q_i` as the source heat per unit volume and :math:`\delta V` as the volume of the cell.
-
-.. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}A_{i \leftrightarrow b}\left[\frac{k_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} + h \right] - S_i \quad \forall b \in \mathcal{J, B} \\
-        b_{i} &= -[S_u]_{i} - q_{i} \cdot \delta V - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b - hA_{i \leftrightarrow b} \cdot T_{\infty}, \quad \forall k \in \mathcal{B} \\
-    \end{aligned}
-
-These equation covers all the cases and reduces to desired formulation
-
-Here: 
-
-- :math:`a_{ij}` is element of A matrix at row i and column j.
-- :math:`k_{i \leftrightarrow j}` is the thermal conductivity.
-- :math:`||x_{i} - x_{j}||^2` is the Euclidean distance between points :math:`i` and :math:`j`.
-- :math:`h` is the convective heat transfer coefficient.
-- :math:`S_i` is the temperature dependent heat source.
-- :math:`[S_u]_{i}` is the independent heat source.
-- :math:`q_{i}` is the heat source per unit volume.
-- :math:`T_b` is the temperature at the boundary surface.
-- :math:`T_{\infty}` is the ambient temperature.
-
-1. If :math:`h=0`, equation takes the Dirichlet BC form.
+In scenarios of higher dimensions, the cell connectivity is more than two thus the generic equation for cells without any boundary faces are a modified form of the equation :eq:`eq:genericSteadyDiffusionDiscretization` as follows:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \right] - S_i \quad \forall b \in \mathcal{J, B} \\
-        b_{i} &= -[S_u]_{i} - q_{i} \cdot \delta V - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
-    \end{aligned}
+    :label: eq:genericTransientDiffusionDiscretization-nD
+    :nowrap:
 
-2. If no internal heat generation, i.e. :math:`q_i = 0`, then takes generalized Dirichlet BC form
+    \begin{align}
+        & - \theta \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i, j} T_{j} \notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i, j} - S_i \right\} \right] T_{i} \notag \\
+        & = (1-\theta) \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i, j} - S_i \right\}\right] T_{i}^{0} \notag \\
+        & + S_i^u \Delta V
+    \end{align}
 
-.. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -\sum_{b \in \mathcal{B}}\left[\frac{k_{i \leftrightarrow b}A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \right] - S_i \quad \forall b \in \mathcal{J, B} \\
-        b_{i} &= -[S_u]_{i} - k_{i \leftrightarrow b} \frac{A_{i \leftrightarrow b}}{||x_{i} - x_{b}||^2} \cdot T_b, \quad \forall k \in \mathcal{B} \\
-    \end{aligned}
-
-3. If the cell under consideration is fully internal i.e. not sharing any of the faces with the boundary, the equation takes the generic formulation where fluxes aree coming fromm all of the faces.
+The above equation works for any arbitrary shape mesh cell in any dimensions, where :math:`n` is the number of shared cells (connected cells) with the cell indexed with :math:`i`. The coefficients are defined as follows:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] -S_i \\
-        b_{i} &= -[S_u]_{i}  \\
-    \end{aligned}
+    :label: eq:coefficientDiscretization
+    :nowrap:
 
-4. If there are no dependent source term or independent source term i.e. :math:`S_i=0` and :math:`S_u=0`
+    \begin{align}
+        a_{i,j} & = - \theta \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i, j} \notag \\
+        a_{i,i} & = \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i, j} - S_i \right\} \right] \notag \\
+        b_i & = (1-\theta) \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
+        & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i, j} - S_i \right\}\right] \notag \\
+        & + S_i^u \Delta V
+    \end{align}
+
+for a generic system of linear algebraic equation of the form:
 
 .. math::
-    \begin{aligned}
-        a_{ij} &= k_{i \leftrightarrow j} \frac{A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}, \quad \forall j \in \mathcal{J} \\
-        a_{ii} &= -\sum_{j \in \mathcal{J}}\left[\frac{k_{i \leftrightarrow j}A_{i \leftrightarrow j}}{||x_{i} - x_{j}||^2}\right] \\
-        b_{i} &= 0  \\
-    \end{aligned}
+    :nowrap:
 
-Summary
--------
+    \begin{align*}
+        A_{i,j} X_{i} = b_{i}
+    \end{align*}
 
-The finite volume discretization of the heat diffusion equation is formulated in a comprehensive fashion considering Dirichlet, Neumann, Heat generation.
+where :math:`A` is the coefficient matrix, :math:`X` is the vector of unknown temperatures, and :math:`b` is the vector of known values.
+
+For a given cell if there are boundary faces, only then special equation is to be used. If it is a Dirichlet boundary conditions
+
+.. math::
+    :nowrap:
+
+    \begin{align*}
+        & \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i, B_j} - S_i \right\} \right] T_{i} \notag \\
+        & = \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i, B_j} - S_i \right\}\right] T_{i}^{0} \notag \\
+        & + S_i^u \Delta V + \sum_{j=1}^n \left[ \frac{k A T_{j,B}^0 }{\Delta x} \right]_B
+    \end{align*}
+
+The :math:`\frac{\rho c \Delta V}{\Delta t}` term should be already added to the coefficient matrix :math:`A` for the cell indexed with :math:`i` and thus, it is unnecessary/redundent to include this term in the equation above. Therefore, the co-efficient update can be simplified to:
+
+.. math::
+    :label: eq:coefficientDiscretization-dirichlet
+    :nowrap:
+
+    \begin{align}
+        a_{i,i} & += \theta \left\{ \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i, B_j} - S_i \right\} \notag \\
+        b_i & += - (1-\theta) \left\{ \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i, B_j} - S_i \right\} T_i^0 \notag \\
+        & + \sum_{j=1}^n \left[ \frac{k A T_{j,B}^0 }{\Delta x} \right]_B
+    \end{align}
+
+For Neumann boundary conditions
+
+.. math::
+    :nowrap:
+
+    \begin{align*}
+        & \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ - S_i \right\} \right] T_{i} \notag \\
+        & = \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{- S_i \right\}\right] T_{i}^{0} \notag \\
+        & + S_i^u \Delta V + \sum_{j=1}^n \left[ hA(T_\infty - T_{j,B}) + \sigma \epsilon A(T_\infty^4 - T_{j, B}^4) \right]_{B}
+    \end{align*}
+
+where
+
+.. math::
+    :label: eq:coefficientDiscretization-neumann
+    :nowrap:
+
+    \begin{align}
+        a_{i,i} & += -\theta S_i \notag \\
+        b_i & += (1-\theta) S_i T_i^0 \notag \notag \\
+        & + \sum_{j=1}^n \left[ hA(T_\infty - T_{j,B}) + \sigma \epsilon A(T_\infty^4 - T_{j, B}^4) \right]_{B}
+    \end{align}
+
+Equation :eq:`eq:coefficientDiscretization`, :eq:`eq:coefficientDiscretization-dirichlet`, and :eq:`eq:coefficientDiscretization-neumann` are all we need for the construction of matrix :math:`A` and the known vector :math:`b` for FVM solution for any n-dimensional heat diffusion transient/steady state problem for any boundary conditions. We simply set :math:`\theta = 0` for explicit, :math:`\theta = 1` for implicit, and :math:`\theta = 0.5` for Crank-Nicolson method and :math:`\Delta t = \infty` with ``np.inf`` for steady state cases.

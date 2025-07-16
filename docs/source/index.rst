@@ -12,7 +12,6 @@ Framework for Additive Manufacturing Emulation (FAME) is a `Python package <http
    :maxdepth: 2
    :caption: Contents:
 
-   Theories <theories/heatDiffusion.rst>
+   Steady State Theories <theories/heatDiffusion.rst>
    Transient Theories <theories/heatDiffusionTransient.rst>
-   Transient Theories 2<theories/heatDiffusionTransient2.rst>
    Codebase <modules>
