@@ -271,7 +271,7 @@ The above equation works for any arbitrary shape mesh cell in any dimensions, wh
     \begin{align}
         a_{i,j} & = - \theta \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i, j} \notag \\
         a_{i,i} & = \left[ \frac {\rho c \Delta V}{\Delta t} + \theta \left\{ \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i, j} - S_i \right\} \right] \notag \\
-        b_i & = (1-\theta) \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i-1} T^{0}_{i-1}\notag \\
+        b_i & = (1-\theta) \sum_{j=1}^n \left[ \frac{kA}{\Delta x} \right]_{i, j} T^{0}_{i, j}\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i, j} - S_i \right\}\right] \notag \\
         & + S_i^u \Delta V
     \end{align}
@@ -334,3 +334,49 @@ where
     \end{align}
 
 Equation :eq:`eq:coefficientDiscretization`, :eq:`eq:coefficientDiscretization-dirichlet`, and :eq:`eq:coefficientDiscretization-neumann` are all we need for the construction of matrix :math:`A` and the known vector :math:`b` for FVM solution for any n-dimensional heat diffusion transient/steady state problem for any boundary conditions. We simply set :math:`\theta = 0` for explicit, :math:`\theta = 1` for implicit, and :math:`\theta = 0.5` for Crank-Nicolson method and :math:`\Delta t = \infty` with ``np.inf`` for steady state cases.
+
+During coding, when considering the connected cells (cells with shared faces), we can use the following logic to determine the coefficients:
+
+
+1. When iterating over cell
+
+    .. math::
+        :nowrap:
+
+        \begin{align*}
+            a_{i, i} & += \frac{\rho c}{\Delta t} - \theta S_i \\
+            b_i & += \frac{\rho c}{\Delta t} + (1 - \theta) S_i + S_i^u \Delta V
+        \end{align*}
+
+2. When the inner loop for iteration over connected cells are considered, :math:`i \neq j` with :math:`n` being the number of connected cells
+    
+    .. math::
+        :nowrap:
+
+        \begin{align*}
+            a_{i,j} & = -\theta \sum_{j=1}^n \left(\frac{kA}{\Delta x} \right)_{i,j} \\
+            a_{i, i} & += \theta \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,j} \\
+            b_i & += (1-\theta) \sum_{j=1}^n \left [ \left( \frac{kA}{\Delta x} \right)_{i,j} T^{0}_{j} - \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right) T_i^0 \right ]
+        \end{align*}
+
+3. When the boundary faces are considered
+
+    i. If Dirichlet boundary condition does not exists and flux is specified (either insulated or convective or radiative)
+
+    .. math::
+        :nowrap:
+
+        \begin{align*}
+            b_i += &\sum_{j=1}^n \left [ hA_j(T_\infty - T_{B_j}) + \sigma \epsilon A_j(T_\infty^4 - T_{B_j}^4) \right ] \\
+            &- (1-\theta) \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right) T_i^0 \\
+        \end{align*}
+    
+    ii. If Dirichlet boundary condition also exists, them simply 
+
+    .. math::
+        :nowrap:
+
+        \begin{align*}
+            a_{i, i} & += \theta \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,B_j} \\
+            b_i & += \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,B} T^{0}_{B_j}
+        \end{align*}

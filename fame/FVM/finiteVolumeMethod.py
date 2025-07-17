@@ -1,6 +1,7 @@
 import vtk
 import numpy as np
 import scipy.sparse as sp
+import warnings
 from .boundaryCondition import BoundaryCondition as bc
 from .discretization import Discretization as disc
 from .mesh import StructuredMesh, StructuredMesh1D
@@ -107,8 +108,16 @@ class FVM:
             )
             print(f"Added {property_name} to {material_name} with method {method}.")
 
-        # Store the populated material property
+        # Store the populated material property and force specific heat and density to be present and set to zero if not defined
         self.materialProperties[material_name] = material_property
+        if not 'thermalConductivity' in self.materialProperties[material_name].properties:
+            raise ValueError("Material property must include 'thermalConductivity'")
+        if not 'specificHeat' in self.materialProperties[material_name].properties:
+            warnings.warn("Material property does not include 'specificHeat', assuming constant value of 0")
+            self.materialProperties[material_name].properties['specificHeat'] = {'baseValue': 0, 'method': 'constant', 'referenceTemperature': 298.15, 'coefficients': []}
+        if not 'density' in self.materialProperties[material_name].properties:
+            warnings.warn("Material property does not include 'density', assuming constant value of 0")
+            self.materialProperties[material_name].properties['density'] = {'baseValue': 0, 'method': 'constant', 'referenceTemperature': 298.15, 'coefficients': []}
         print(f"Material properties successfully initialized for {material_name}.")
 
     @timing_decorator
