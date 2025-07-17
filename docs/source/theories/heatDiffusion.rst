@@ -68,7 +68,7 @@ Assuming the convention of **fluxes moving out the cell as positive**, we can ex
 
 or
 
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
+
 .. math::
     :label: eq:heatDiscretization
     :nowrap:
@@ -84,7 +84,7 @@ Here if needed
 
 From the above equation, we can rearrange the terms to form a system of equations suitable to be solved iteratively.:
 
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
+
 .. math::
    :nowrap:
 
@@ -97,7 +97,7 @@ From the above equation, we can rearrange the terms to form a system of equation
 
 Changing the sign of the equation, and for a general case where the source term is not zero (:math:`S_u = q \Delta V = S_i^u \Delta V`), we can express the equation as:
 
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
+
 .. math::
     :label: eq:organizedHeatDiffusionDiscretization
     :nowrap:
@@ -122,7 +122,7 @@ and
 Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be defined as follows:
 
 
-.. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
+
 .. math:: 
     :label: eq:matrixCoefficients
     :nowrap:

@@ -105,7 +105,7 @@ class MeshWriter3D(MeshWriter):
         time = 0.0 if time is None else time
         step = 0 if step is None else step
 
-        vts_file = os.path.join(output_dir, f"output_{step:04d}.vts")
+        vts_file = os.path.join(output_dir, f"{output_dir}_{step:04d}.vts")
         self._writeSingleVTS(vts_file, variables)
 
         # Update the PVD file

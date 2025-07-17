@@ -30,6 +30,7 @@ class FVM:
         self.visualization = None
         self.output = None
         self.nodalSolution = None
+        self.solution = np.zeros(0, dtype=float)  # Initialize solution as an empty array of dimension read from the mesh
 
     def meshGeneration(self):
         raise NotImplementedError("meshGeneration must be implemented by subclass.")
@@ -65,6 +66,21 @@ class FVM:
         print("Boundary conditions applied.")
 
     @timing_decorator
+    def applyInitialCondition(self):
+        initial_conditions = self.config['simulation'].get('initialConditions', {})
+        if not initial_conditions:
+            print("No initial conditions provided.")
+            self.solution = (np.full(self.mesh.GetNumberOfCells(), 0.0), 0, None)
+            return
+        
+        for variable, value in initial_conditions.items():
+            if variable == 'temperature':
+                self.solution = (np.full(self.mesh.GetNumberOfCells(), value), 0, None)
+                print(f"Initial temperature set to {value}.")
+            else:
+                print(f"Unknown initial condition variable: {variable}")
+    
+    @timing_decorator
     def loadMaterialProperty(self):
         material_config = self.config.get('simulation', {}).get('material', {})
         self.materialProperties = {}
@@ -96,12 +112,12 @@ class FVM:
         print(f"Material properties successfully initialized for {material_name}.")
 
     @timing_decorator
-    def discretize(self):
+    def discretize(self, timeStep: float = np.inf, timeIntegrationMethod: float = 0.0):
         if not self.mesh:
             raise ValueError("Mesh must be generated before discretization.")
         material_name = self.config['simulation']['material']['name']  # Get material name dynamically
-        self.discretization = disc(self.mesh, self.solver, self.materialProperties[material_name], self.boundaryConditions)
-        self.discretization.discretizeHeatDiffusion()
+        self.discretization = disc(self.mesh, self.solver, self.materialProperties[material_name], self.boundaryConditions, self.solution[0])
+        self.discretization.discretizeHeatDiffusion(timeStep, timeIntegrationMethod)
         print("Discretization applied.")
     
     @timing_decorator
@@ -150,9 +166,8 @@ class FVM:
         self.solution = self.solver.solve(method=solver_type, preconditioner="none")
         print(f"Solver {solver_type} completed with tolerance {tolerance} and max iterations {maxIterations}.")        
     
-    @timing_decorator
-    def visualizeResults(self):
-        if not self.solver or self.solver.solution is None:
+    def visualizeResults(self, time=None, step=None):
+        if self.solution is None:
             raise ValueError("Solution must exist before visualization.")
             
         # Initialize MeshWriter with the mesh
@@ -173,16 +188,36 @@ class FVM:
         output_path = self.config['simulation'].get('visualization', {}).get('path', './')
         
         # Write the VTS file
-        self.visualization.writeVTS(output_path, variables)
+        self.visualization.writeVTS(output_path, variables, time, step)
         print(f"Visualization generated and saved at {output_path} with variable '{variable_name}'.")
 
     def simulate(self):
         self.meshGeneration()
         self.applyBoundaryConditions()
+        self.applyInitialCondition()
         self.loadMaterialProperty()
-        self.discretize()
-        self.solveEquations()
-        self.visualizeResults()
+        if not self.config.get('simulation', {}).get('timeControl').get('steadyState', False):
+            initialTime = 0
+            finalTime = self.config['simulation']['timeControl']['finalTime']
+            timeStep = self.config['simulation']['timeControl']['timeStep']
+            timeIntegrationMethod = self.config['simulation']['timeControl']['timeIntegrationMethod']
+            startTime = initialTime + timeStep
+            writeInterval = self.config['simulation']['timeControl'].get('outputInterval', timeStep)
+            step = 0
+            self.visualizeResults(initialTime, step)
+            for time in np.arange(startTime, finalTime, timeStep):
+                print(f"Simulating time step at {time:.2f} seconds.")
+                self.discretize(timeStep, timeIntegrationMethod)
+                self.solveEquations()
+                if time % writeInterval == 0:
+                    step += 1
+                    print(f"Outputting results at time {time:.2f} seconds.")
+                    self.visualizeResults(time, step)
+        else:
+            print("Running steady-state simulation.")
+            self.discretize(timeStep=np.inf, timeIntegrationMethod=1.0)
+            self.solveEquations()
+            self.visualizeResults()
         print("Simulation complete.")
 
 

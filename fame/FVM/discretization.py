@@ -7,7 +7,7 @@ from .property import MaterialProperty
 from .boundaryCondition import BoundaryCondition
 
 class Discretization:
-    def __init__(self, mesh, solver, property, boundaryCondition):
+    def __init__(self, mesh, solver, property, boundaryCondition, solution=None):
         """
         Initializes the Discretization class.
 
@@ -21,15 +21,20 @@ class Discretization:
         self.solver = solver
         self.boundaryCondition = boundaryCondition
         self.property = property
+        self.solution = solution
 
-    def discretizeHeatDiffusion(self):
+    def discretizeHeatDiffusion(self, timeStep: float = np.inf, timeIntegrationMethod: float = 0.0):
         """
         Discretize the 3D heat diffusion equation and populate the sparse matrix A and vector b from the solver class.
         Uses temperature-dependent thermal conductivity from the MaterialProperty class.
+        Args:
+            timeStep (float): Time step for the discretization, default is infinity for steady state case.
+            timeIntegrationMethod (float): Method for time integration, default is 0.0 for explicit. For implicit, set to 1.0, and for Crank-Nicolson, set to 0.5.
         """
 
         for cellID in range(self.mesh.numCells):
             
+            oldSolution = self.solution[cellID]
             if 'thermalConductivity' in self.property.properties:
                 thermalConductivity = self.property.evaluate('thermalConductivity', 298.15)  # Default temp used for evaluation
             else:

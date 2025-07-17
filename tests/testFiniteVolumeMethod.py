@@ -104,14 +104,6 @@ class TestDiscretizationSmall(TestDiscretization):
         with open(yaml_path, 'r') as file:
             cls.config = yaml.safe_load(file)
         cls.fvm = FVM(cls.config)
-        cls.fvm.meshGeneration()
-        cls.fvm.applyBoundaryConditions()
-        cls.fvm.loadMaterialProperty()
-
-        cls.fvm.solver = Solver(cls.fvm.mesh.A, cls.fvm.mesh.b)
-        
-        cls.fvm.discretize()
-        cls.fvm.solveEquations()
 
     def test_fullSimulation(self):
         self.fvm.simulate()
@@ -123,6 +115,23 @@ class TestDiscretizationSmall(TestDiscretization):
         self.assertTrue(os.path.exists(output_path))
         print("Full simulation test passed.")
 
+class TestDiscretizationTransientSmall(TestDiscretization):
+    @classmethod
+    def setUpClass(cls):
+        yaml_path = os.path.join(os.path.dirname(__file__), '..', 'examples', 'FVM', 'HeatDiffusion', 'setup_transient_small.yaml')
+        with open(yaml_path, 'r') as file:
+            cls.config = yaml.safe_load(file)
+        cls.fvm = FVM(cls.config)
+
+    def test_fullSimulation(self):
+        self.fvm.simulate()
+        self.assertIsNotNone(self.fvm.mesh)
+        self.assertIsNotNone(self.fvm.boundaryConditions)
+        self.assertIn('thermalConductivity', self.fvm.materialProperties['Aluminum'].properties)
+        self.assertIsNotNone(self.fvm.solver)
+        output_path = self.fvm.config['simulation'].get('visualization', {}).get('path', './testOutput')
+        self.assertTrue(os.path.exists(output_path))
+        print("Full simulation test passed.")
 
 class TestDiscretization1D(unittest.TestCase):
     @classmethod
