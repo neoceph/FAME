@@ -59,6 +59,17 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
     def GetNumberOfCells(self):
         return super().GetNumberOfCells()
     
+    def GetDimensions(self):
+        """
+        Returns the dimensions of the structured grid.
+        
+        Returns:
+            tuple: (nx, ny, nz)
+        """
+        dims = [0, 0, 0]
+        vtk.vtkStructuredGrid.GetDimensions(self, dims)
+        return tuple(dims)
+    
     def _generateGrid(self, bounds, divisions):
         """
         Generates the structured grid points and sets dimensions.
@@ -107,46 +118,72 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
         Computes shared cell information for all cells.
         """
         self.sharedCells = []
-        for cell_id in range(self.GetNumberOfCells()):
-            currentCell = self.GetCell(cell_id)
-            points = currentCell.GetPoints()
 
-            vertices = {tuple(points.GetPoint(i)) for i in range(points.GetNumberOfPoints())}
-            shared_cells = []
-            shared_faces = set()
+        nx, ny, nz = self.divisions
 
-            for other_cell_id in range(self.GetNumberOfCells()):
-                if other_cell_id == cell_id:
-                    continue
+        for k in range(nz):
+            for j in range(ny):
+                for i in range(nx):
+                    cell_id = i + j * nx + k * nx * ny
+                    faces = self.cellFaceIds[cell_id]
 
-                other_cell = self.GetCell(other_cell_id)
-                other_points = other_cell.GetPoints()
-                other_vertices = {tuple(other_points.GetPoint(i)) for i in range(other_points.GetNumberOfPoints())}
-                
-                shared_points = vertices.intersection(other_vertices)
+                    shared_cells = []
+                    shared_faces = []
+                    boundary_faces = []
 
-                if len(shared_points) > 2:
-                    shared_cells.append(other_cell_id)
-                    shared_faces.update(face_id for face_id, face_points in self.faces.items()
-                                        if set(self.GetPoint(pt) for pt in face_points) == shared_points)
+                    # -Y face / neighbor
+                    if j > 0:
+                        shared_cells.append(cell_id - nx)
+                        shared_faces.append(faces[0])
+                    else:
+                        boundary_faces.append(faces[0])
 
-            # Identify boundary faces by subtracting shared faces from all faces of the cell
-            all_faces = {
-                face_id for face_id, face_points in self.faces.items()
-                if set(self.GetPoint(pt) for pt in face_points).issubset(vertices)
-            }
-            boundary_faces = all_faces - shared_faces
+                    # +X face / neighbor
+                    if i < nx - 1:
+                        shared_cells.append(cell_id + 1)
+                        shared_faces.append(faces[1])
+                    else:
+                        boundary_faces.append(faces[1])
 
-            self.sharedCells.append({
-                "cell_id": cell_id,
-                "shared_cells": shared_cells,
-                "shared_faces": list(shared_faces),
-                "boundary_faces": list(boundary_faces)
-            })
+                    # +Y face / neighbor
+                    if j < ny - 1:
+                        shared_cells.append(cell_id + nx)
+                        shared_faces.append(faces[2])
+                    else:
+                        boundary_faces.append(faces[2])
+
+                    # -X face / neighbor
+                    if i > 0:
+                        shared_cells.append(cell_id - 1)
+                        shared_faces.append(faces[3])
+                    else:
+                        boundary_faces.append(faces[3])
+
+                    # -Z face / neighbor
+                    if k > 0:
+                        shared_cells.append(cell_id - nx * ny)
+                        shared_faces.append(faces[4])
+                    else:
+                        boundary_faces.append(faces[4])
+
+                    # +Z face / neighbor
+                    if k < nz - 1:
+                        shared_cells.append(cell_id + nx * ny)
+                        shared_faces.append(faces[5])
+                    else:
+                        boundary_faces.append(faces[5])
+
+                    self.sharedCells.append({
+                        "cell_id": cell_id,
+                        "shared_cells": shared_cells,
+                        "shared_faces": shared_faces,
+                        "boundary_faces": boundary_faces,
+                    })
 
     def _computeCellFaces(self):
-        face_set = set()
         face_id = 0
+        self.face_lookup = {}
+        self.cellFaceIds = []  # Map each cell to its six face IDs
 
         cell_iter = self.NewCellIterator()
 
@@ -155,15 +192,22 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
             cell_iter.GetCell(cell)
             faces = self._extractCellFaces(cell, hexahedron=True)
 
+            cell_face_ids = []
             for face in faces:
                 face_tuple = tuple(sorted(face))
-                if face_tuple not in face_set:
-                    face_set.add(face_tuple)
+                if face_tuple not in self.face_lookup:
+                    self.face_lookup[face_tuple] = face_id
                     self.faces[face_id] = face_tuple
                     center = np.mean([self.GetPoint(idx) for idx in face_tuple], axis=0)
                     self.faceCenters[face_id] = tuple(center)
+                    current_id = face_id
                     face_id += 1
+                else:
+                    current_id = self.face_lookup[face_tuple]
 
+                cell_face_ids.append(current_id)
+
+            self.cellFaceIds.append(cell_face_ids)
             cell_iter.GoToNextCell()
 
     def getCellCenter(self, cell_id):

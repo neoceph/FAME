@@ -70,7 +70,7 @@ or
 
 .. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
-    :label: eq:heatDiffusionDiscretization
+    :label: eq:heatDiscretization
     :nowrap:
 
     \begin{align}
@@ -99,7 +99,7 @@ Changing the sign of the equation, and for a general case where the source term 
 
 .. nowrap is used with .. math::to prevent wrapping the content for latex rendering when align is used
 .. math::
-    :label: eq:heatDiffusionDiscretizationOrganized
+    :label: eq:organizedHeatDiffusionDiscretization
     :nowrap:
 
     \begin{align}
@@ -127,12 +127,12 @@ Thus, the coefficients of the matrix :math:`A` and the vector :math:`b` can be d
     :label: eq:matrixCoefficients
     :nowrap:
 
-    \begin{align*}
+    \begin{align}
         a_{i, i-1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} \notag \\
         a_{i, i} &= \left( \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, i-1} - S_i\right) \notag \\
         a_{i, i+1} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
         b_i &= q \Delta V = S_u
-    \end{align*}
+    \end{align}
 
 Where :math:`\left\{\Delta x\right\}_{i+1} = ||x_{i+1} - x_i||^2`, :math:`\left\{\Delta x\right\}_{i-1} = ||x_{i-1} - x_i||^2` is the distance between the two cell centers.
 
@@ -152,25 +152,27 @@ In the case of boundary conditions, the discretization can be modified to accoun
 
 1. Dirichlet Boundary Condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`1 \le j \le n` for a cell indexed with :math:`i` equation :eq:`eq:heatDiffusionDiscretization` can be modified as follows:
+For a list of boundary faces defined with :math:`\mathcal{B}` and indexed with :math:`1 \le j \le n` for a cell indexed with :math:`i` equation :eq:`eq:heatDiscretization` can be modified as follows:
 
 .. math::
     :nowrap:
 
     \begin{align*}
-    \Rightarrow\ 
-    & -\left[ 0 \right] T_{i-1} \notag \\
-    & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} - S_i \right] T_i \notag \\
-    & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} = S_i^u \Delta V + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} T_B
+        \Rightarrow\ 
+        & -\left[ 0 \right] T_{i-1} \notag \\
+        & +\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} - S_i \right] T_i \notag \\
+        & -\left[\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \right] T_{i+1} = S_i^u \Delta V + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} T_B
     \end{align*}
 
 From the equation, the coefficients of the matrix :math:`A` and the vector :math:`b` can be defined as follows:
 
 .. math::
+    :nowrap:
+
     \begin{align*}
         a_{ij} &= -\left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} \notag \\
         a_{ii} &= \left\{ \frac{kA}{\Delta x} \right\}_{i, i+1} + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} - S_i \notag \\
-        b_{i} &= S_i^u \Delta V + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} T_B \notag \\
+        b_{i} &= S_i^u \Delta V + \left\{ \frac{kA}{\Delta x} \right\}_{i, B} T_B \notag
     \end{align*}
 
 
@@ -182,7 +184,7 @@ The flux at the boundary is specified for the Neumann boundary condition, which 
 #. a convective heat transfer with coefficient :math:`h` and ambient temperature :math:`T_\infty` as :math:`\frac {\partial T}{\partial x} = hA(T_\infty - T_B)`, 
 #. a radiative heat loss with emissivity :math:`\epsilon`, Stefan Boltzmann constant :math:`\epsilon`, and ambient temperature :math:`T_\infty` as :math:`\frac {\partial T}{\partial x} = \sigma \epsilon A(T_\infty^4 - T_B^4)`. 
 
-We can consider the temperature of the boundary node and the cell almost equal as a mean to simplify where :math:`T_B = T_i`. In an attempt to develop a generic boundary condition that covers all three of the cases, we can add all of them together and replace the flux at the boundary. Then the equation :eq:`eq:heatDiffusionDiscretizationOrganized` becomes:
+We can consider the temperature of the boundary node and the cell almost equal as a mean to simplify where :math:`T_B = T_i`. In an attempt to develop a generic boundary condition that covers all three of the cases, we can add all of them together and replace the flux at the boundary. Then the equation :eq:`eq:organizedHeatDiffusionDiscretization` becomes:
 
 .. math::
     :nowrap:
