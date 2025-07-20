@@ -31,6 +31,8 @@ class StructuredMesh:
         self.faces = {}
         self.faceCenters = {}
         self.divisions = divisions
+        self.faceAreas = {}
+        self.cellVolumes = {}
         # self.is_1D = len(divisions) == 1
 
 
@@ -42,6 +44,8 @@ class StructuredMesh:
         self._computeCellFaces()
         self._computeCellCenter()
         self._computeNeighbors()
+        self._computeFaceAreas()
+        self._computeCellVolumes()
         
         self.numCells = self.GetNumberOfCells()
 
@@ -333,6 +337,27 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
         """
         return self.pointFaces.get(point_id, [])        
 
+    def _computeFaceAreas(self):
+        """Pre-compute and store the area of each face."""
+        self.faceAreas = {}
+        for fid, face_pts in self.faces.items():
+            vtk_points = vtk.vtkPoints()
+            for pid in face_pts:
+                vtk_points.InsertNextPoint(self.GetPoint(pid))
+            self.faceAreas[fid] = self.calculateArea(vtk_points)
+
+    def _computeCellVolumes(self):
+        """Pre-compute and store the volume for each cell."""
+        self.cellVolumes = {}
+        for cell_id in range(self.GetNumberOfCells()):
+            shared_faces_info = self.sharedCells[cell_id]
+            face_ids = shared_faces_info['shared_faces'] + shared_faces_info['boundary_faces']
+            volume = 0.0
+            for fid in face_ids:
+                volume += self.faceAreas[fid]
+            volume /= len(face_ids)
+            self.cellVolumes[cell_id] = abs(volume)
+
     def _extractCellFaces(self, cell, hexahedron=False):
         """
         Extracts the six faces from a hexahedral cell.
@@ -416,7 +441,7 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
 
     def getCellVolume(self, cell_id):
         """
-        Calculate the volume of a cell using the Gauss Divergence Theorem.
+        Retrieve the precalculated volume of a cell.
 
         Args:
             cell_id (int): ID of the cell.
@@ -426,32 +451,13 @@ class StructuredMesh3D(StructuredMesh, vtk.vtkStructuredGrid):
         """
         if cell_id < 0 or cell_id >= self.GetNumberOfCells():
             raise ValueError(f"Cell ID {cell_id} is out of range.")
-        
-        # Retrieve shared and boundary faces for the cell
-        shared_faces_info = self.sharedCells[cell_id]
-        face_ids = shared_faces_info['shared_faces'] + shared_faces_info['boundary_faces']
-        
-        volume = 0.0
-        for face_id in face_ids:
-            face_pts = self.faces[face_id]
-
-            # Calculate face area and normal using existing calculateArea method
-            vtk_points = vtk.vtkPoints()
-            for pt_id in face_pts:
-                vtk_points.InsertNextPoint(self.GetPoint(pt_id))
-            
-            area = self.calculateArea(vtk_points)
-            
-            volume += area
-        
-        volume /= len(face_ids)
-
-        return abs(volume)
+        return self.cellVolumes[cell_id]
 
 
 class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
     def __init__(self, bounds, divisions, faceArea=1.0):
         vtk.vtkPolyData.__init__(self)
+        self.faceArea = np.float64(faceArea)
         super().__init__(bounds, divisions)
 
         # Define faceArea as a float variable specific to 1D mesh
@@ -487,20 +493,6 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
         self.SetPoints(points)
         self.SetLines(lines)
         
-    def _computeCellFaces(self):
-
-        # Directly use point IDs to represent unique faces
-        self.faces = {}  # Reset face storage
-        self.faceCenters = {}
-
-        num_points = self.GetNumberOfPoints()
-
-        for i in range(num_points):
-            # Use the point ID as the face ID
-            point_id = i
-            self.faces[point_id] = (point_id,)
-            self.faceCenters[point_id] = self.GetPoint(point_id)
-
     def _computeCellCenter(self):
         """
         Computes the centers of all cells using vtkCellCenters.
@@ -618,6 +610,20 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
                 matching_faces.append(fid)
         
         return matching_faces
+    
+    def _computeFaceAreas(self):
+        """Pre-compute and store face areas for 1D mesh."""
+        self.faceAreas = {fid: self.faceArea for fid in self.faces}
+
+    def _computeCellVolumes(self):
+        """Pre-compute and store volumes for 1D cells."""
+        self.cellVolumes = {}
+        for cell_id in range(self.GetNumberOfCells()):
+            line = self.GetCell(cell_id)
+            p1 = np.array(self.GetPoint(line.GetPointId(0)))
+            p2 = np.array(self.GetPoint(line.GetPointId(1)))
+            cell_length = np.linalg.norm(p2 - p1)
+            self.cellVolumes[cell_id] = cell_length * self.faceArea
         
     def calculateArea(self, vtk_points, includeNormal=False):
         """
@@ -628,29 +634,17 @@ class StructuredMesh1D(StructuredMesh, vtk.vtkPolyData):
     
     def getCellVolume(self, cell_id):
         """
-        Calculate the volume of a 1D cell using its length and face area.
+        Retrieve the precalculated volume of a 1D cell.
 
         Args:
             cell_id (int): ID of the cell.
 
         Returns:
             float: Volume of the cell.
-        
+
         Raises:
             ValueError: If the cell ID is out of range.
         """
         if cell_id < 0 or cell_id >= self.GetNumberOfCells():
             raise ValueError(f"Cell ID {cell_id} is out of range.")
-        
-        # Get the line segment representing the cell
-        line = self.GetCell(cell_id)
-        p1 = np.array(self.GetPoint(line.GetPointId(0)))
-        p2 = np.array(self.GetPoint(line.GetPointId(1)))
-
-        # Calculate the length of the line segment
-        cell_length = np.linalg.norm(p2 - p1)
-
-        # Calculate volume (length * cross-sectional area)
-        volume = cell_length * self.faceArea
-
-        return volume
+        return self.cellVolumes[cell_id]
