@@ -27,7 +27,7 @@ simulation:
       temperature:
         variableType: "scalar"
         convectionCoefficient: 15
-        emmissivity: 0.85
+        emmissivity: 0
         ambientTemperature: 298
     x:
       0:  

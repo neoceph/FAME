@@ -35,14 +35,15 @@ class Discretization:
 
         for cellID in range(self.mesh.numCells):
             
-            oldSolution = self.solution[cellID]
-            
-            thermalConductivity = self.property.evaluate('thermalConductivity', oldSolution)  # Default temp used for evaluation
-            specificHeat = self.property.evaluate('specificHeat', oldSolution)
-            density = self.property.evaluate('density', oldSolution)
+            thermalConductivity = self.property.evaluate('thermalConductivity', self.solution[cellID])  # Default temp used for evaluation
+            specificHeat = self.property.evaluate('specificHeat', self.solution[cellID])
+            density = self.property.evaluate('density', self.solution[cellID])
             cellVolume = self.mesh.getCellVolume(cellID)
             temporalFlux = density * specificHeat * cellVolume / timeStep
             
+            self.mesh.A[cellID, cellID] += temporalFlux - timeIntegrationMethod * self.boundaryCondition.dependentSource[cellID, 0]
+            self.mesh.b[cellID] += (temporalFlux + (1-timeIntegrationMethod)*self.boundaryCondition.dependentSource[cellID, 0])*self.solution[cellID] +  self.boundaryCondition.volumetricSource[cellID, 0] * cellVolume
+
             # off-diagonal matrix element construction
             for sharedCellID, sharedFace in zip (self.mesh.sharedCells[cellID]['shared_cells'], self.mesh.sharedCells[cellID]['shared_faces']): # the assumption is that sharedCells and sharedFaces are lists of the same length as only one face is shared between two cells.
                 points = vtk.vtkPoints()
@@ -56,11 +57,8 @@ class Discretization:
                 
                 self.mesh.A[cellID, sharedCellID] = -timeIntegrationMethod * cellFlux
                 self.mesh.A[cellID, cellID] += timeIntegrationMethod * cellFlux
-
-                self.mesh.b[cellID] += (1-timeIntegrationMethod) * (cellFlux * oldSolution[sharedCellID] - cellFlux * oldSolution[cellID])
+                self.mesh.b[cellID] += (1-timeIntegrationMethod) * (cellFlux * self.solution[sharedCellID] - cellFlux * self.solution[cellID])
                            
-            self.mesh.A[cellID, cellID] += temporalFlux - timeIntegrationMethod * self.boundaryCondition.dependentSource[cellID, 0]
-            self.mesh.b[cellID] += (temporalFlux + (1-timeIntegrationMethod)*self.boundaryCondition.dependentSource[cellID, 0])*oldSolution[cellID] +  self.boundaryCondition.volumetricSource[cellID, 0] * cellVolume
 
             # diagonal marix element construction for boundary faces
             for sharedBoundaryFace in self.mesh.sharedCells[cellID]['boundary_faces']:
@@ -70,6 +68,10 @@ class Discretization:
                 
                 boundaryFaceArea = self.mesh.calculateArea(points)
                 distance_cell_to_boundary_face = np.linalg.norm(np.array(self.mesh.cellCenters[cellID]) - np.array(self.mesh.faceCenters[sharedBoundaryFace]))
+                boundaryFlux = thermalConductivity * boundaryFaceArea / distance_cell_to_boundary_face
                 
-                self.mesh.A[cellID, cellID] += thermalConductivity * (boundaryFaceArea)/(distance_cell_to_boundary_face) + self.boundaryCondition.convectionCoefficient
-                self.mesh.b[cellID] += thermalConductivity * self.boundaryCondition.bcValues[sharedBoundaryFace, 0] * (boundaryFaceArea) / (distance_cell_to_boundary_face)+self.boundaryCondition.convectionCoefficient * boundaryFaceArea * self.boundaryCondition.ambientTemperature
+                self.mesh.b[cellID] += self.boundaryCondition.convectionCoefficient * boundaryFaceArea * (self.boundaryCondition.ambientTemperature - self.solution[cellID]) + self.boundaryCondition.emissivity * boundaryFaceArea * (self.boundaryCondition.ambientTemperature**4 - self.solution[cellID]**4)
+                
+                if self.boundaryCondition.bcValues[sharedBoundaryFace, 0] is not None:
+                    self.mesh.A[cellID, cellID] += timeIntegrationMethod * boundaryFlux
+                    self.mesh.b[cellID] += boundaryFlux * self.boundaryCondition.bcValues[sharedBoundaryFace, 0] - (1-timeIntegrationMethod) * boundaryFlux * self.solution[cellID]

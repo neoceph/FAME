@@ -142,16 +142,6 @@ class TestDiscretization1D(unittest.TestCase):
 
         # Dynamically create FVM instance based on the new static __new__ method
         cls.fvm = FVM(cls.config)
-        
-        # Initialize mesh, boundary conditions, and material properties
-        cls.fvm.meshGeneration()
-        cls.fvm.applyBoundaryConditions()
-        cls.fvm.loadMaterialProperty()
-
-        # Set up solver and discretization
-        cls.fvm.solver = Solver(cls.fvm.mesh.A, cls.fvm.mesh.b)
-        cls.fvm.discretize()
-        cls.fvm.solveEquations()
 
     def test_fullSimulation(self):
         # Run full simulation and check that all parts are initialized correctly

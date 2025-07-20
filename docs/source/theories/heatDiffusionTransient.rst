@@ -175,7 +175,7 @@ Rearrenging the equation to organize all the unknowns on the left side and known
         & = (1-\theta) \left[ 0 \right]_B T^{0}_{i-1}\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
         & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
-        & + S_u \Delta V + \theta \left[ \frac{k A T_B }{\Delta x} \right]_B + (1-\theta) \left[ \frac{k A T_B^0 }{\Delta x} \right]_B \notag
+        & + S_u \Delta V + \theta \left[ \frac{k A}{\Delta x} \right]_B T_B + (1-\theta) \left[ \frac{k A }{\Delta x} \right]_B T_B^0 \notag
     \end{align}
 
 Since the temperature at the boundary is fixed and known, meaning :math:`T_B = T_B^0`, we can express the equation as:
@@ -190,7 +190,7 @@ Since the temperature at the boundary is fixed and known, meaning :math:`T_B = T
         & = (1-\theta) \left[ 0 \right]_B T^{0}_{i-1}\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
         & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
-        & + S_u \Delta V + \theta \left[ \frac{k A T_B^0 }{\Delta x} \right]_B + (1-\theta) \left[ \frac{k A T_B^0 }{\Delta x} \right]_B \notag
+        & + S_u \Delta V + \theta \left[ \frac{k A }{\Delta x} \right]_B T_B^0 + (1-\theta) \left[ \frac{k A }{\Delta x} \right]_B T_B^0 \notag
     \end{align}
 
 Therefore the coefficients with the term :math:`\theta` cancels out, and the equation simplifies to:
@@ -206,7 +206,7 @@ Therefore the coefficients with the term :math:`\theta` cancels out, and the equ
         & = 0\notag \\
         & + \left[ \frac {\rho c \Delta V}{\Delta t} - (1-\theta) \left\{ \left(\frac{kA}{\Delta x} \right)_{i+1} + \left( \frac{kA}{\Delta x} \right)_{B} -S_i \right\}\right] T_{i}^{0} \notag \\
         & +(1-\theta) \left[ \frac{kA}{\Delta x} \right]_{i+1} T^{0}_{i+1} \notag \\
-        & + S_i^u \Delta V + \left[ \frac{k A T_B^0 }{\Delta x} \right]_B 
+        & + S_i^u \Delta V + \left[ \frac{k A }{\Delta x} \right]_B T_B^0 
     \end{align}
 
 2. Neumann Boundary Condition
@@ -227,7 +227,7 @@ We can consider the temperature of the boundary node and the cell almost equal a
     \rho c (T_{i}-T_{i}^{0}) \frac{\Delta V}{\Delta t} & = \theta\left(\left[kA \frac{T_{i+1} - T_i}{\Delta x} \right]_{i+1} \notag \right. \\
     & \left. + \left[0 + hA(T_B-T_\infty) + \sigma \epsilon A(T_B^4 - T_\infty^4) \right]_{B} + S_i T_{i} \vphantom{\frac{\Delta V}{\Delta t}}\right) \notag \\
     + (1-\theta) & \left(\left[kA \frac{T^{0}_{i+1} - T^{0}_i}{\Delta x} \right]_{i+1} \notag \right. \\
-    & \left. + \left[0 + hA(T_\infty - T_B) + \sigma \epsilon A(T_\infty^4 - T_B^4) \right]_{B} + S_i T_{i} \vphantom{\frac{\Delta V}{\Delta t}}\right) \notag \\
+    & \left. + \left[0 + hA(T_\infty - T_B) + \sigma \epsilon A(T_\infty^4 - T_B^4) \right]_{B} + S_i T_{i}^0 \vphantom{\frac{\Delta V}{\Delta t}}\right) \notag \\
     & + S_u \Delta V
     \end{align*}
 
@@ -345,7 +345,7 @@ During coding, when considering the connected cells (cells with shared faces), w
 
         \begin{align*}
             a_{i, i} & += \frac{\rho c}{\Delta t} - \theta S_i \\
-            b_i & += \frac{\rho c}{\Delta t} + (1 - \theta) S_i + S_i^u \Delta V
+            b_i & += \left [ \frac{\rho c}{\Delta t} + (1 - \theta) S_i \right ] T_i^0 + S_i^u \Delta V
         \end{align*}
 
 2. When the inner loop for iteration over connected cells are considered, :math:`i \neq j` with :math:`n` being the number of connected cells
@@ -368,7 +368,6 @@ During coding, when considering the connected cells (cells with shared faces), w
 
         \begin{align*}
             b_i += &\sum_{j=1}^n \left [ hA_j(T_\infty - T_{B_j}) + \sigma \epsilon A_j(T_\infty^4 - T_{B_j}^4) \right ] \\
-            &- (1-\theta) \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right) T_i^0 \\
         \end{align*}
     
     ii. If Dirichlet boundary condition also exists, them simply 
@@ -378,5 +377,5 @@ During coding, when considering the connected cells (cells with shared faces), w
 
         \begin{align*}
             a_{i, i} & += \theta \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,B_j} \\
-            b_i & += \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,B} T^{0}_{B_j}
+            b_i & += \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{i,B} T^{0}_{B_j} - (1-\theta) \sum_{j=1}^n \left( \frac{kA}{\Delta x} \right)_{B_j} T_i^0
         \end{align*}

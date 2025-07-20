@@ -5,9 +5,9 @@ simulation:
       y: [0, 1]
       z: [0, 1]
     divisions:
-      x: 10
-      y: 10
-      z: 10
+      x: 100
+      y: 4
+      z: 4
 
   material:
     name: "Aluminum"
@@ -30,7 +30,7 @@ simulation:
       temperature:
         variableType: "scalar"
         convectionCoefficient: 0
-        emmissivity: 0.85
+        emmissivity: 0.0
         ambientTemperature: 298
     x:
       0:  
@@ -45,14 +45,14 @@ simulation:
           value: 100
       1:
         - type: "temperature"
-          value: 500
+          value: 100
     z:
       0:  
         - type: "temperature"
           value: 100
       1:
         - type: "temperature"
-          value: 500
+          value: 100
 
   solver:
     module: "petsc"
