@@ -4,7 +4,7 @@
 ## Development Instructions: [here](docs/developerReadme/development.md) &  Documentation: [here](https://fame-ud.readthedocs.io/en/latest/)
 
 ## Overview
-FAME is a simulation tool designed to model the laser powder bed fusion (LPBF) additive manufacturing process using the Finite Volume Method (FVM). This tool helps in understanding the thermal and mechanical behavior of materials during the LPBF process.
+FAME is a simulation tool designed to model the laser powder bed fusion (LPBF) additive manufacturing process using the Finite Volume Method (FVM) and Convolution hierarchical deep-learning neural network (C-HiDeNN). This tool helps in understanding the thermal and mechanical behavior of materials during the LPBF process.
 
 ## Features
 - **Thermal Simulation**: Models the heat distribution and cooling rates.
