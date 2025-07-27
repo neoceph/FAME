@@ -104,14 +104,6 @@ class TestDiscretizationSmall(TestDiscretization):
         with open(yaml_path, 'r') as file:
             cls.config = yaml.safe_load(file)
         cls.fvm = FVM(cls.config)
-        cls.fvm.meshGeneration()
-        cls.fvm.applyBoundaryConditions()
-        cls.fvm.loadMaterialProperty()
-
-        cls.fvm.solver = Solver(cls.fvm.mesh.A, cls.fvm.mesh.b)
-        
-        cls.fvm.discretize()
-        cls.fvm.solveEquations()
 
     def test_fullSimulation(self):
         self.fvm.simulate()
